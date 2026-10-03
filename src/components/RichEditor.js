@@ -1,7 +1,9 @@
+import { useEffect, useState } from 'react';
 import { EditorContent, useEditor, useEditorState } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { Placeholder } from '@tiptap/extensions';
 import { Bold, Italic, Link2, List, ListOrdered, Quote, Underline } from 'lucide-react';
+import useMediaQuery from '../lib/useMediaQuery';
 
 const BUTTONS = [
   { key: 'bold', icon: Bold, label: 'Bold', run: (c) => c.toggleBold() },
@@ -12,7 +14,7 @@ const BUTTONS = [
   { key: 'blockquote', icon: Quote, label: 'Quote', run: (c) => c.toggleBlockquote() },
 ];
 
-function Toolbar({ editor }) {
+function Toolbar({ editor, className = '', style }) {
   const active = useEditorState({
     editor,
     selector: ({ editor: e }) =>
@@ -31,13 +33,13 @@ function Toolbar({ editor }) {
   };
 
   return (
-    <div className="format-bar" role="toolbar" aria-label="Text formatting">
+    <div className={`format-bar ${className}`} style={style} role="toolbar" aria-label="Text formatting">
       {BUTTONS.map(({ key, icon: Icon, label, run }) => (
         <button
           type="button"
           key={key}
           className={`format-btn${active[key] ? ' is-active' : ''}`}
-          onMouseDown={(e) => e.preventDefault()}
+          onPointerDown={(e) => e.preventDefault()}
           onClick={() => run(editor.chain().focus()).run()}
           aria-label={label}
           aria-pressed={active[key]}
@@ -49,7 +51,7 @@ function Toolbar({ editor }) {
       <button
         type="button"
         className={`format-btn${active.link ? ' is-active' : ''}`}
-        onMouseDown={(e) => e.preventDefault()}
+        onPointerDown={(e) => e.preventDefault()}
         onClick={toggleLink}
         aria-label={active.link ? 'Remove link' : 'Add link'}
         aria-pressed={active.link}
@@ -59,6 +61,24 @@ function Toolbar({ editor }) {
       </button>
     </div>
   );
+}
+
+/** Height of the on-screen keyboard (iOS overlays it; Android usually resizes the page instead). */
+function useKeyboardInset() {
+  const [inset, setInset] = useState(0);
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return undefined;
+    const update = () => setInset(Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop)));
+    update();
+    vv.addEventListener('resize', update);
+    vv.addEventListener('scroll', update);
+    return () => {
+      vv.removeEventListener('resize', update);
+      vv.removeEventListener('scroll', update);
+    };
+  }, []);
+  return inset;
 }
 
 /**
@@ -85,10 +105,42 @@ export default function RichEditor({ initialHtml, onChange, autoFocus }) {
     onUpdate: ({ editor: e }) => onChange(e.isEmpty ? '' : e.getHTML(), e.getText({ blockSeparator: '\n' })),
   });
 
+  const isPhone = useMediaQuery('(max-width: 768px)');
+  const keyboardInset = useKeyboardInset();
+  const [focused, setFocused] = useState(false);
+
+  useEffect(() => {
+    if (!editor) return undefined;
+    const onFocus = () => setFocused(true);
+    const onBlur = () => setFocused(false);
+    editor.on('focus', onFocus);
+    editor.on('blur', onBlur);
+    setFocused(editor.isFocused);
+    return () => {
+      editor.off('focus', onFocus);
+      editor.off('blur', onBlur);
+    };
+  }, [editor]);
+
+  // On phones the toolbar floats just above the keyboard while typing, and the
+  // bottom tab bar steps aside, so formatting is always one tap away.
+  const floating = isPhone && focused;
+  useEffect(() => {
+    document.body.classList.toggle('is-typing', floating);
+    return () => document.body.classList.remove('is-typing');
+  }, [floating]);
+
   if (!editor) return null;
   return (
     <>
-      <Toolbar editor={editor} />
+      <Toolbar editor={editor} className={floating ? 'is-placeholder' : ''} />
+      {floating && (
+        <Toolbar
+          editor={editor}
+          className="format-bar-floating"
+          style={{ bottom: `calc(${keyboardInset}px + 8px + var(--safe-bottom))` }}
+        />
+      )}
       <EditorContent editor={editor} />
     </>
   );

@@ -1598,6 +1598,28 @@
   scrollbar-width: none;
 }
 
+.format-bar.is-placeholder {
+  visibility: hidden;
+}
+
+.format-bar-floating {
+  position: fixed;
+  left: 50%;
+  z-index: 60;
+  margin: 0;
+  transform: translateX(-50%);
+  max-width: calc(100vw - 16px);
+  box-shadow: var(--shadow-lg);
+}
+
+body.is-typing .bottom-nav {
+  display: none;
+}
+
+body.is-typing .app-main {
+  padding-bottom: 72px;
+}
+
 .format-btn {
   display: grid;
   place-items: center;
