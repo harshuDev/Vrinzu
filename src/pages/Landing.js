@@ -205,7 +205,7 @@ export default function Landing() {
             <Link to="/login">Sign In</Link>
             <Link to="/signup">Sign Up</Link>
           </nav>
-          <p className="footer-copy">© {new Date().getFullYear()} Vrinzu. Made with 💙 for writers everywhere.</p>
+          <p className="footer-copy">© {new Date().getFullYear()} Vrinzu. Made with 💙</p>
         </div>
       </footer>
     </div>
