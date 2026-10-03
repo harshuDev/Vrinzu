@@ -11,7 +11,12 @@ Built with React (Create React App), Supabase (auth + Postgres with Row Level Se
 - **Entries** — mood, title, 2-line preview, date and tags on each card
 - **Editor** — Playfair Display title, full-page writing area, autosave 1.5 s after you stop typing (Ctrl/⌘+S saves instantly), mood picker, tags (Enter to add, × to remove), delete
 - **Search** — searches titles and content across all journals, with highlighted previews
-- **Settings** — update display name, change password, sign out
+- **Photos** — attach photos to any entry (stored privately in Supabase Storage, auto-resized), full-screen viewer
+- **Calendar** — month view with a mood marker on every day you wrote; tap a day to read it or write a back-dated entry
+- **Export** — download any journal (or all of them) as a PDF document or a plain-text file
+- **Dark mode** — System / Light / Dark, saved to your account so it follows you to every device
+- **Passcode lock** — optional 4–6 digit passcode on open and after a minute in the background (stored only as a salted hash on your account)
+- **Settings** — appearance, passcode, export, display name, password, sign out
 - **Mobile & PWA** — bottom tab bar on phones, 44 px touch targets, installable on iOS / Android
 
 ## Getting started
@@ -24,6 +29,7 @@ npm start
 
 1. Create a project at [supabase.com](https://supabase.com).
 2. Open **SQL Editor → New query**, paste the contents of [`supabase-schema.sql`](./supabase-schema.sql) and run it.
+   (Existing projects created before photos were added: run [`supabase/migrations/002_entry_photos.sql`](./supabase/migrations/002_entry_photos.sql) instead.)
 3. Copy the project URL and anon key from **Project Settings → API** into `.env.local`.
 
 ## Project structure

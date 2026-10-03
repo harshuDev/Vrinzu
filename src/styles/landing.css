@@ -37,7 +37,7 @@
   position: relative;
   overflow: hidden;
   padding: 88px 0 96px;
-  background: linear-gradient(180deg, var(--ocean-50), var(--surface));
+  background: linear-gradient(180deg, var(--tint), var(--surface));
 }
 
 .hero-blobs {
@@ -131,15 +131,15 @@
   padding: 6px 14px;
   border-radius: var(--radius-full);
   background: color-mix(in srgb, var(--surface) 75%, transparent);
-  border: 1px solid var(--ocean-100);
-  color: var(--ocean-700);
+  border: 1px solid var(--tint-strong);
+  color: var(--accent-text);
   font-size: 0.85rem;
   font-weight: 600;
 }
 
 .eyebrow-light {
-  background: color-mix(in srgb, var(--surface) 12%, transparent);
-  border-color: color-mix(in srgb, var(--surface) 20%, transparent);
+  background: color-mix(in srgb, var(--text-on-primary) 12%, transparent);
+  border-color: color-mix(in srgb, var(--text-on-primary) 20%, transparent);
   color: var(--ocean-100);
 }
 
@@ -289,7 +289,7 @@
 .feature-card:hover {
   transform: translateY(-4px);
   box-shadow: var(--shadow-md);
-  border-color: var(--ocean-200);
+  border-color: var(--tint-border);
 }
 
 .feature-icon {
@@ -298,7 +298,7 @@
   width: 52px;
   height: 52px;
   border-radius: 14px;
-  background: linear-gradient(135deg, var(--ocean-50), var(--ocean-100));
+  background: linear-gradient(135deg, var(--tint), var(--tint-strong));
   color: var(--ocean-600);
 }
 
@@ -369,7 +369,7 @@
   border-radius: 50%;
   color: var(--text-on-primary);
   background: radial-gradient(circle at 35% 30%, var(--ocean-400), var(--ocean-700) 70%);
-  box-shadow: 0 0 0 18px color-mix(in srgb, var(--surface) 5%, transparent), 0 0 0 40px color-mix(in srgb, var(--surface) 3%, transparent), 0 20px 80px color-mix(in srgb, var(--ocean-500) 45%, transparent);
+  box-shadow: 0 0 0 18px color-mix(in srgb, var(--text-on-primary) 5%, transparent), 0 0 0 40px color-mix(in srgb, var(--text-on-primary) 3%, transparent), 0 20px 80px color-mix(in srgb, var(--ocean-500) 45%, transparent);
   animation: float-orb 5s ease-in-out infinite;
 }
 

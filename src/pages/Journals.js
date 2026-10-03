@@ -9,6 +9,7 @@ import JournalModal from '../components/JournalModal';
 import ConfirmDialog from '../components/ConfirmDialog';
 import Spinner from '../components/Spinner';
 import { supabase } from '../lib/supabase';
+import { removeJournalPhotos } from '../lib/photos';
 
 export default function Journals() {
   const [journals, setJournals] = useState([]);
@@ -31,6 +32,7 @@ export default function Journals() {
   }, [load]);
 
   const handleDelete = async () => {
+    await removeJournalPhotos(deleting.id).catch(() => {});
     const { error } = await supabase.from('journals').delete().eq('id', deleting.id);
     if (error) {
       toast.error(error.message);

@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { applyTheme } from '../lib/theme';
 
 const AuthContext = createContext(null);
 
@@ -57,6 +58,12 @@ export function AuthProvider({ children }) {
 
   const user = session?.user ?? null;
   const displayName = user?.user_metadata?.full_name?.trim() || user?.email?.split('@')[0] || '';
+  const themePref = user?.user_metadata?.theme || 'system';
+
+  // Theme preference is stored on the account, so it follows the user to every device.
+  useEffect(() => {
+    applyTheme(themePref);
+  }, [themePref]);
 
   const value = useMemo(
     () => ({ session, user, displayName, loading, signIn, signUp, signOut, updateProfile }),

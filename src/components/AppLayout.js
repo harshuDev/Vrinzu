@@ -1,12 +1,16 @@
+import { useEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { BookOpen, House, LogOut, Search, Settings } from 'lucide-react';
+import { BookOpen, CalendarDays, House, LogOut, Search, Settings } from 'lucide-react';
 import Logo from './Logo';
+import LockScreen from './LockScreen';
+import { RELOCK_AFTER_MS } from '../lib/pin';
 import { useAuth } from '../context/AuthContext';
 
 const NAV_ITEMS = [
   { to: '/app', label: 'Home', icon: House, end: true },
   { to: '/app/journals', label: 'Journals', icon: BookOpen },
+  { to: '/app/calendar', label: 'Calendar', icon: CalendarDays },
   { to: '/app/search', label: 'Search', icon: Search },
   { to: '/app/settings', label: 'Settings', icon: Settings },
 ];
@@ -23,6 +27,24 @@ export function Avatar({ name, size = 'md' }) {
 export default function AppLayout() {
   const { user, displayName, signOut } = useAuth();
   const navigate = useNavigate();
+  const hasPin = Boolean(user?.user_metadata?.pin_hash);
+  // Locked when the app opens (a fresh page load) if a passcode is set.
+  const [locked, setLocked] = useState(hasPin);
+  const hiddenAt = useRef(null);
+
+  // Lock again after the app has been in the background for a while.
+  useEffect(() => {
+    if (!hasPin) return undefined;
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') {
+        hiddenAt.current = Date.now();
+      } else if (hiddenAt.current && Date.now() - hiddenAt.current > RELOCK_AFTER_MS) {
+        setLocked(true);
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  }, [hasPin]);
 
   const handleSignOut = async () => {
     try {
@@ -33,6 +55,8 @@ export default function AppLayout() {
       toast.error(err.message);
     }
   };
+
+  if (locked && hasPin) return <LockScreen onUnlock={() => setLocked(false)} />;
 
   return (
     <div className="app-shell">

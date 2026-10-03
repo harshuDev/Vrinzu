@@ -31,6 +31,17 @@
   --border: #e2e8f0;
   --border-strong: #cbd5e1;
 
+  /* Accent tints (theme-aware) */
+  --tint: var(--ocean-50);
+  --tint-strong: var(--ocean-100);
+  --tint-border: var(--ocean-200);
+  --accent-text: var(--ocean-700);
+  --accent-text-strong: var(--ocean-800);
+
+  /* Constant inks (same in both themes) */
+  --ink: #0f172a;
+  --shadow-ink: #0f172a;
+
   /* Feedback */
   --danger: #dc2626;
   --danger-soft: #fef2f2;
@@ -39,10 +50,10 @@
   --success: #059669;
 
   /* Effects */
-  --overlay: color-mix(in srgb, var(--text-primary) 45%, transparent);
-  --shadow-sm: 0 1px 2px color-mix(in srgb, var(--text-primary) 6%, transparent);
-  --shadow-md: 0 4px 16px color-mix(in srgb, var(--text-primary) 8%, transparent);
-  --shadow-lg: 0 12px 40px color-mix(in srgb, var(--text-primary) 14%, transparent);
+  --overlay: color-mix(in srgb, var(--shadow-ink) 45%, transparent);
+  --shadow-sm: 0 1px 2px color-mix(in srgb, var(--shadow-ink) 6%, transparent);
+  --shadow-md: 0 4px 16px color-mix(in srgb, var(--shadow-ink) 8%, transparent);
+  --shadow-lg: 0 12px 40px color-mix(in srgb, var(--shadow-ink) 14%, transparent);
   --shadow-ocean: 0 10px 30px color-mix(in srgb, var(--ocean-600) 28%, transparent);
   --focus-ring: 0 0 0 3px color-mix(in srgb, var(--ocean-500) 30%, transparent);
 
@@ -63,6 +74,54 @@
   --mobile-header-height: 56px;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-top: env(safe-area-inset-top, 0px);
+}
+
+/* ---------- Dark theme ----------
+   "system" (no data-theme) follows the OS; data-theme forces a choice. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+  --text-primary: #e2e8f0;
+  --text-secondary: #a3b3c7;
+  --text-muted: #6b7f99;
+  --surface: #0f1d30;
+  --surface-2: #091321;
+  --surface-ocean: #0b1a2c;
+  --border: #1d2e45;
+  --border-strong: #2a405c;
+  --tint: color-mix(in srgb, var(--ocean-500) 13%, var(--surface));
+  --tint-strong: color-mix(in srgb, var(--ocean-500) 24%, var(--surface));
+  --tint-border: color-mix(in srgb, var(--ocean-500) 38%, var(--surface));
+  --accent-text: var(--ocean-300);
+  --accent-text-strong: var(--ocean-200);
+  --danger: #f87171;
+  --danger-soft: #3a1219;
+  --danger-border: #7f1d1d;
+  --success: #34d399;
+  --shadow-ink: #000000;
+  color-scheme: dark;
+  }
+}
+
+:root[data-theme='dark'] {
+  --text-primary: #e2e8f0;
+  --text-secondary: #a3b3c7;
+  --text-muted: #6b7f99;
+  --surface: #0f1d30;
+  --surface-2: #091321;
+  --surface-ocean: #0b1a2c;
+  --border: #1d2e45;
+  --border-strong: #2a405c;
+  --tint: color-mix(in srgb, var(--ocean-500) 13%, var(--surface));
+  --tint-strong: color-mix(in srgb, var(--ocean-500) 24%, var(--surface));
+  --tint-border: color-mix(in srgb, var(--ocean-500) 38%, var(--surface));
+  --accent-text: var(--ocean-300);
+  --accent-text-strong: var(--ocean-200);
+  --danger: #f87171;
+  --danger-soft: #3a1219;
+  --danger-border: #7f1d1d;
+  --success: #34d399;
+  --shadow-ink: #000000;
+  color-scheme: dark;
 }
 
 /* ---------- Reset / base ---------- */
@@ -114,7 +173,7 @@ a {
 }
 
 a:hover {
-  color: var(--ocean-700);
+  color: var(--accent-text);
 }
 
 img,
@@ -142,16 +201,16 @@ button {
 code {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.875em;
-  background: var(--ocean-50);
-  color: var(--ocean-800);
+  background: var(--tint);
+  color: var(--accent-text-strong);
   padding: 2px 6px;
   border-radius: 6px;
   word-break: break-word;
 }
 
 mark {
-  background: var(--ocean-100);
-  color: var(--ocean-900);
+  background: var(--tint-strong);
+  color: var(--accent-text-strong);
   border-radius: 3px;
   padding: 0 2px;
 }
@@ -250,6 +309,12 @@ mark {
     transform 0.15s ease;
 }
 
+.btn svg,
+.icon-btn svg,
+.toolbar-btn svg {
+  flex-shrink: 0;
+}
+
 .btn:active:not(:disabled) {
   transform: translateY(1px);
 }
@@ -276,30 +341,30 @@ mark {
 }
 
 .btn-ghost:hover:not(:disabled) {
-  background: var(--ocean-50);
-  color: var(--ocean-700);
+  background: var(--tint);
+  color: var(--accent-text);
 }
 
 .btn-outline {
   background: var(--surface);
-  color: var(--ocean-700);
-  border-color: var(--ocean-200);
+  color: var(--accent-text);
+  border-color: var(--tint-border);
 }
 
 .btn-outline:hover:not(:disabled) {
   border-color: var(--ocean-400);
-  color: var(--ocean-800);
+  color: var(--accent-text-strong);
 }
 
 .btn-light {
   background: var(--surface);
-  color: var(--ocean-700);
+  color: var(--accent-text);
   box-shadow: var(--shadow-md);
 }
 
 .btn-light:hover:not(:disabled) {
-  background: var(--ocean-50);
-  color: var(--ocean-800);
+  background: var(--tint);
+  color: var(--accent-text-strong);
 }
 
 .btn-danger {
@@ -345,8 +410,8 @@ mark {
 }
 
 .icon-btn:hover {
-  background: var(--ocean-50);
-  color: var(--ocean-700);
+  background: var(--tint);
+  color: var(--accent-text);
 }
 
 .icon-btn-danger:hover {
@@ -440,8 +505,8 @@ mark {
   gap: 2px;
   padding: 3px 10px;
   border-radius: var(--radius-full);
-  background: var(--ocean-50);
-  color: var(--ocean-700);
+  background: var(--tint);
+  color: var(--accent-text);
   font-size: 0.8rem;
   font-weight: 600;
   white-space: nowrap;
@@ -542,7 +607,7 @@ mark {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  border: 3px solid var(--ocean-100);
+  border: 3px solid var(--tint-strong);
   border-top-color: var(--ocean-600);
   animation: spin 0.8s linear infinite;
 }

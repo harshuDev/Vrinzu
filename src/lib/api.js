@@ -1,10 +1,12 @@
 import { supabase } from './supabase';
 
-/** Creates an empty entry in a journal and returns it. */
-export async function createEntry(userId, journalId) {
+/** Creates an empty entry in a journal (optionally back-dated) and returns it. */
+export async function createEntry(userId, journalId, createdAt) {
+  const row = { user_id: userId, journal_id: journalId, title: '', content: '', tags: [] };
+  if (createdAt) row.created_at = createdAt.toISOString();
   const { data, error } = await supabase
     .from('entries')
-    .insert({ user_id: userId, journal_id: journalId, title: '', content: '', tags: [] })
+    .insert(row)
     .select()
     .single();
   if (error) throw error;
@@ -38,5 +40,11 @@ export function entryDisplayTitle(entry) {
 }
 
 export function isEntryEmpty(entry) {
-  return !entry.title?.trim() && !entry.content?.trim() && !entry.mood && !(entry.tags && entry.tags.length);
+  return (
+    !entry.title?.trim() &&
+    !entry.content?.trim() &&
+    !entry.mood &&
+    !(entry.tags && entry.tags.length) &&
+    !(entry.photos && entry.photos.length)
+  );
 }
