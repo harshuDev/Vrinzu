@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import toast from 'react-hot-toast';
 import {
@@ -21,17 +21,22 @@ import { ChevronLeft, ChevronRight, Feather, PenLine } from 'lucide-react';
 import EntryCard from '../components/EntryCard';
 import Spinner from '../components/Spinner';
 import { supabase } from '../lib/supabase';
-import { createEntry, getOrCreateDefaultJournal } from '../lib/api';
-import { useAuth } from '../context/AuthContext';
+import { useStartEntry } from '../context/StartEntryContext';
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const dayKey = (d) => format(d, 'yyyy-MM-dd');
 
 export default function Calendar() {
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  const [month, setMonth] = useState(() => startOfMonth(new Date()));
-  const [selected, setSelected] = useState(() => new Date());
+  const startEntry = useStartEntry();
+  const [searchParams] = useSearchParams();
+  // ?date=YYYY-MM-DD (from Insights) opens straight to that day.
+  const initialDay = (() => {
+    const p = searchParams.get('date');
+    const d = p && /^\d{4}-\d{2}-\d{2}$/.test(p) ? new Date(`${p}T12:00:00`) : null;
+    return d && !Number.isNaN(d.getTime()) ? d : new Date();
+  })();
+  const [month, setMonth] = useState(() => startOfMonth(initialDay));
+  const [selected, setSelected] = useState(() => initialDay);
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -42,7 +47,7 @@ export default function Calendar() {
         start: startOfWeek(month, { weekStartsOn: 1 }),
         end: endOfWeek(endOfMonth(month), { weekStartsOn: 1 }),
       }),
-    [month]
+    [month],
   );
 
   useEffect(() => {
@@ -83,18 +88,12 @@ export default function Calendar() {
 
   const writeOnDay = async () => {
     setCreating(true);
-    try {
-      const journal = await getOrCreateDefaultJournal(user.id);
-      // Keep the current time of day so entries on the same date stay in writing order.
-      const now = new Date();
-      const when = new Date(selected);
-      when.setHours(now.getHours(), now.getMinutes(), now.getSeconds());
-      const entry = await createEntry(user.id, journal.id, isToday(selected) ? null : when);
-      navigate(`/app/entries/${entry.id}`);
-    } catch (err) {
-      toast.error(err.message);
-      setCreating(false);
-    }
+    // Keep the current time of day so entries on the same date stay in writing order.
+    const now = new Date();
+    const when = new Date(selected);
+    when.setHours(now.getHours(), now.getMinutes(), now.getSeconds());
+    await startEntry({ createdAt: isToday(selected) ? null : when });
+    setCreating(false);
   };
 
   return (
@@ -190,7 +189,9 @@ export default function Calendar() {
               <Feather size={26} />
             </span>
             <h3>{selectedIsFuture ? 'Not written yet' : 'No entries this day'}</h3>
-            <p>{selectedIsFuture ? 'This day is still ahead of you.' : 'Missed a day? You can still write about it.'}</p>
+            <p>
+              {selectedIsFuture ? 'This day is still ahead of you.' : 'Missed a day? You can still write about it.'}
+            </p>
           </div>
         ) : (
           <div className="entry-list">

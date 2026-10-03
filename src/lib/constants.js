@@ -18,20 +18,30 @@ export const JOURNAL_COLORS = [
   { name: 'Slate', value: '#64748b' },
 ];
 
-export const MOODS = [
-  { emoji: '😊', label: 'Happy' },
-  { emoji: '😔', label: 'Sad' },
-  { emoji: '😤', label: 'Frustrated' },
-  { emoji: '😴', label: 'Tired' },
-  { emoji: '🤔', label: 'Thoughtful' },
-  { emoji: '🥰', label: 'Loved' },
-  { emoji: '😰', label: 'Anxious' },
-  { emoji: '🎉', label: 'Celebrating' },
-  { emoji: '😌', label: 'Calm' },
-  { emoji: '🤩', label: 'Excited' },
-  { emoji: '😶', label: 'Speechless' },
-  { emoji: '😅', label: 'Relieved' },
+// Each mood belongs to one of three feelings. Charts and card tints colour by
+// feeling (3 validated colours) rather than by all 12 moods.
+export const MOOD_GROUPS = [
+  { key: 'bright', label: 'Bright' },
+  { key: 'calm', label: 'Calm' },
+  { key: 'heavy', label: 'Heavy' },
 ];
+
+export const MOODS = [
+  { emoji: '😊', label: 'Happy', group: 'bright' },
+  { emoji: '😔', label: 'Sad', group: 'heavy' },
+  { emoji: '😤', label: 'Frustrated', group: 'heavy' },
+  { emoji: '😴', label: 'Tired', group: 'heavy' },
+  { emoji: '🤔', label: 'Thoughtful', group: 'calm' },
+  { emoji: '🥰', label: 'Loved', group: 'bright' },
+  { emoji: '😰', label: 'Anxious', group: 'heavy' },
+  { emoji: '🎉', label: 'Celebrating', group: 'bright' },
+  { emoji: '😌', label: 'Calm', group: 'calm' },
+  { emoji: '🤩', label: 'Excited', group: 'bright' },
+  { emoji: '😶', label: 'Speechless', group: 'calm' },
+  { emoji: '😅', label: 'Relieved', group: 'bright' },
+];
+
+export const moodGroup = (emoji) => MOODS.find((m) => m.emoji === emoji)?.group ?? null;
 
 export const moodLabel = (emoji) => MOODS.find((m) => m.emoji === emoji)?.label ?? '';
 
@@ -51,4 +61,38 @@ export const JOURNAL_PAPERS = [
   { value: 'lined', label: 'Lined' },
   { value: 'warm', label: 'Warm paper' },
   { value: 'dotted', label: 'Dotted' },
+];
+
+// One prompt per day (picked by day of the year), with a shuffle for another.
+export const PROMPTS = [
+  'What made you smile today?',
+  'What is something you are looking forward to?',
+  'Describe a small moment you want to remember.',
+  'What is on your mind right now?',
+  'Who made a difference to your day, and how?',
+  'What did you learn this week?',
+  'What would make tomorrow a good day?',
+  'Write about a place where you feel at peace.',
+  'What are three things you are grateful for?',
+  'What is something you have been putting off, and why?',
+  'Describe today in three words, then explain them.',
+  'What is a recent win, however small?',
+  'What is draining your energy lately?',
+  'What would you tell yourself a year ago?',
+  'What song, book or film has stayed with you recently?',
+  'What does a perfect ordinary day look like for you?',
+  'What are you proud of this month?',
+  'Write a letter to someone you miss.',
+  'What is a habit you want to build?',
+  'What surprised you today?',
+  'Where do you want to be a year from now?',
+  'What is something kind someone did for you?',
+  'What is worrying you, and what is one step you can take?',
+  'Describe the view from where you are sitting.',
+  'What made you laugh recently?',
+  'What is a memory from childhood that still feels close?',
+  'What do you need more of right now?',
+  'What did you do today just for yourself?',
+  'What is a question you keep coming back to?',
+  'Who are you becoming?',
 ];

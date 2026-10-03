@@ -1,18 +1,36 @@
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { Image as ImageIcon, Lock, Trash2 } from 'lucide-react';
 import { entryDisplayTitle } from '../lib/api';
-import { moodLabel } from '../lib/constants';
+import { moodGroup, moodLabel } from '../lib/constants';
+import { getPhotoUrlBatched } from '../lib/photos';
 import { useJournalLock } from '../context/JournalLockContext';
+
+function useCoverPhoto(path) {
+  const [url, setUrl] = useState(null);
+  useEffect(() => {
+    if (!path) return undefined;
+    let alive = true;
+    getPhotoUrlBatched(path).then((u) => alive && setUrl(u));
+    return () => {
+      alive = false;
+    };
+  }, [path]);
+  return url;
+}
 
 export default function EntryCard({ entry, onDelete, showJournal = false, preview, to }) {
   const journal = entry.journals;
   const href = to ?? `/app/entries/${entry.id}`;
   const { isLocked, requestUnlock } = useJournalLock();
   const navigate = useNavigate();
+  const locked = isLocked(journal);
+  const coverUrl = useCoverPhoto(locked ? null : entry.photos?.[0]);
+  const group = moodGroup(entry.mood);
 
   // Entries in a locked journal show no title or text until it's unlocked.
-  if (isLocked(journal)) {
+  if (locked) {
     return (
       <article className="entry-card entry-card-locked">
         <button
@@ -40,8 +58,13 @@ export default function EntryCard({ entry, onDelete, showJournal = false, previe
   }
 
   return (
-    <article className="entry-card">
+    <article
+      className={`entry-card${group ? ` mood-tint mood-${group}` : ''}${entry.photos?.length ? ' has-photo' : ''}`}
+    >
       <Link to={href} className="entry-card-link">
+        {entry.photos?.length > 0 && (
+          <div className="entry-card-photo">{coverUrl && <img src={coverUrl} alt="" loading="lazy" />}</div>
+        )}
         <div className="entry-card-head">
           <span className="entry-mood" title={moodLabel(entry.mood) || 'No mood'}>
             {entry.mood || '📝'}

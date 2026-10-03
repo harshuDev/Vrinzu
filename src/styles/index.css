@@ -45,6 +45,12 @@
   --paper-margin: color-mix(in srgb, #f43f5e 35%, transparent);
   --paper-dot: color-mix(in srgb, var(--text-primary) 18%, transparent);
 
+  /* Mood feelings (validated categorical trio; see Insights) */
+  --mood-bright: #1baf7a;
+  --mood-calm: #2a78d6;
+  --mood-heavy: #eb6834;
+  --mood-none: #b8c3d1;
+
   /* Constant inks (same in both themes) */
   --ink: #0f172a;
   --shadow-ink: #0f172a;
@@ -110,6 +116,10 @@
   --paper-rule: color-mix(in srgb, var(--ocean-400) 20%, transparent);
   --paper-margin: color-mix(in srgb, #fb7185 30%, transparent);
   --paper-dot: color-mix(in srgb, var(--text-primary) 16%, transparent);
+  --mood-bright: #199e70;
+  --mood-calm: #3987e5;
+  --mood-heavy: #d95926;
+  --mood-none: #4a5b72;
   color-scheme: dark;
   }
 }
@@ -138,6 +148,10 @@
   --paper-rule: color-mix(in srgb, var(--ocean-400) 20%, transparent);
   --paper-margin: color-mix(in srgb, #fb7185 30%, transparent);
   --paper-dot: color-mix(in srgb, var(--text-primary) 16%, transparent);
+  --mood-bright: #199e70;
+  --mood-calm: #3987e5;
+  --mood-heavy: #d95926;
+  --mood-none: #4a5b72;
   color-scheme: dark;
 }
 
@@ -230,6 +244,10 @@ mark {
   color: var(--accent-text-strong);
   border-radius: 3px;
   padding: 0 2px;
+}
+
+.nowrap {
+  white-space: nowrap;
 }
 
 .container {

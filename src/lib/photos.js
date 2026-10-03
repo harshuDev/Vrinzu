@@ -58,3 +58,31 @@ export async function removeJournalPhotos(journalId) {
   if (error) throw error;
   await removePhotos(data.flatMap((e) => e.photos ?? []));
 }
+
+// Cards ask for one thumbnail each; requests made in the same moment are sent
+// to Supabase as a single batch, and results are cached for the session.
+const urlCache = new Map(); // path -> Promise<string|null>
+let pending = [];
+let flushTimer = null;
+
+function flushPending() {
+  const batch = pending;
+  pending = [];
+  flushTimer = null;
+  getPhotoUrls(batch.map((p) => p.path))
+    .then((urls) => batch.forEach((p) => p.resolve(urls[p.path] ?? null)))
+    .catch(() => batch.forEach((p) => p.resolve(null)));
+}
+
+export function getPhotoUrlBatched(path) {
+  if (!urlCache.has(path)) {
+    urlCache.set(
+      path,
+      new Promise((resolve) => {
+        pending.push({ path, resolve });
+        if (!flushTimer) flushTimer = setTimeout(flushPending, 30);
+      })
+    );
+  }
+  return urlCache.get(path);
+}

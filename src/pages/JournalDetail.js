@@ -13,17 +13,17 @@ import ExportModal from '../components/ExportModal';
 import LockedPanel from '../components/LockedPanel';
 import Spinner from '../components/Spinner';
 import { supabase } from '../lib/supabase';
-import { createEntry, entryDisplayTitle } from '../lib/api';
+import { entryDisplayTitle } from '../lib/api';
 import { removePhotos } from '../lib/photos';
 import useMediaQuery from '../lib/useMediaQuery';
-import { useAuth } from '../context/AuthContext';
+import { useStartEntry } from '../context/StartEntryContext';
 import { useJournalLock } from '../context/JournalLockContext';
 
 const WIDE = '(min-width: 1024px)';
 
 export default function JournalDetail() {
   const { journalId, entryId } = useParams();
-  const { user } = useAuth();
+  const startEntry = useStartEntry();
   const { isLocked, requestUnlock } = useJournalLock();
   const navigate = useNavigate();
   const isWide = useMediaQuery(WIDE);
@@ -55,13 +55,8 @@ export default function JournalDetail() {
 
   const handleNewEntry = async () => {
     setCreating(true);
-    try {
-      const entry = await createEntry(user.id, journalId);
-      setEntries((list) => [entry, ...list]);
-      navigate(entryPath(entry.id));
-    } catch (err) {
-      toast.error(err.message);
-    }
+    const entry = await startEntry({ journalId, to: (e) => entryPath(e.id) });
+    if (entry) setEntries((list) => [entry, ...list]);
     setCreating(false);
   };
 

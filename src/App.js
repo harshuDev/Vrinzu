@@ -14,6 +14,7 @@ import JournalDetail from './pages/JournalDetail';
 import EntryEditor from './pages/EntryEditor';
 import Search from './pages/Search';
 import Calendar from './pages/Calendar';
+import Insights from './pages/Insights';
 import Settings from './pages/Settings';
 import NotFound from './pages/NotFound';
 
@@ -51,6 +52,7 @@ export default function App() {
             </Route>
             <Route path="entries/:entryId" element={<EntryEditor />} />
             <Route path="calendar" element={<Calendar />} />
+            <Route path="insights" element={<Insights />} />
             <Route path="search" element={<Search />} />
             <Route path="settings" element={<Settings />} />
             <Route path="*" element={<Navigate to="/app" replace />} />
