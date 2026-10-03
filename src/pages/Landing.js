@@ -108,24 +108,37 @@ export default function Landing() {
             </Link>
           </div>
 
-          <div className="hero-preview" aria-hidden="true">
-            <div className="preview-card">
-              <div className="preview-toolbar">
+          <div className="hero-showcase">
+            <figure className="device-browser">
+              <div className="device-browser-bar" aria-hidden="true">
                 <span className="dot" />
                 <span className="dot" />
                 <span className="dot" />
-                <span className="preview-status">Saved</span>
+                <span className="device-browser-url">vrinzu-diary.vercel.app</span>
               </div>
-              <div className="preview-body">
-                <span className="preview-mood">😌</span>
-                <h3>A quiet morning by the sea</h3>
-                <p>I am a part of all that I have met.</p>
-                <div className="preview-tags">
-                  <span className="tag">#gratitude</span>
-                  <span className="tag">#mornings</span>
-                </div>
-              </div>
-            </div>
+              <picture>
+                <source srcSet="/hero/desktop-dark.webp" media="(prefers-color-scheme: dark)" />
+                <img
+                  src="/hero/desktop-light.webp"
+                  width="1600"
+                  height="1000"
+                  alt="The Vrinzu writing screen showing an entry titled A quiet morning by the sea"
+                  fetchpriority="high"
+                />
+              </picture>
+            </figure>
+            <figure className="device-phone">
+              <span className="device-phone-notch" aria-hidden="true" />
+              <picture>
+                <source srcSet="/hero/phone-dark.webp" media="(prefers-color-scheme: dark)" />
+                <img
+                  src="/hero/phone-light.webp"
+                  width="540"
+                  height="1169"
+                  alt="The Vrinzu home screen on a phone with journals and recent entries"
+                />
+              </picture>
+            </figure>
           </div>
         </div>
       </section>
