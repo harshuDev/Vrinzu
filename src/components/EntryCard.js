@@ -1,14 +1,47 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
-import { Image as ImageIcon, Trash2 } from 'lucide-react';
+import { Image as ImageIcon, Lock, Trash2 } from 'lucide-react';
 import { entryDisplayTitle } from '../lib/api';
 import { moodLabel } from '../lib/constants';
+import { useJournalLock } from '../context/JournalLockContext';
 
-export default function EntryCard({ entry, onDelete, showJournal = false, preview }) {
+export default function EntryCard({ entry, onDelete, showJournal = false, preview, to }) {
   const journal = entry.journals;
+  const href = to ?? `/app/entries/${entry.id}`;
+  const { isLocked, requestUnlock } = useJournalLock();
+  const navigate = useNavigate();
+
+  // Entries in a locked journal show no title or text until it's unlocked.
+  if (isLocked(journal)) {
+    return (
+      <article className="entry-card entry-card-locked">
+        <button
+          type="button"
+          className="entry-card-link"
+          onClick={async () => (await requestUnlock(journal)) && navigate(href)}
+        >
+          <div className="entry-card-head">
+            <span className="entry-mood">
+              <Lock size={20} />
+            </span>
+            <div className="entry-card-heading">
+              <h3 className="entry-title">Locked entry</h3>
+              <time className="entry-date" dateTime={entry.created_at}>
+                {format(new Date(entry.created_at), 'EEE, MMM d, yyyy')}
+              </time>
+            </div>
+          </div>
+          <p className="entry-preview">
+            In {journal.cover_emoji} {journal.title}. Tap to unlock.
+          </p>
+        </button>
+      </article>
+    );
+  }
+
   return (
     <article className="entry-card">
-      <Link to={`/app/entries/${entry.id}`} className="entry-card-link">
+      <Link to={href} className="entry-card-link">
         <div className="entry-card-head">
           <span className="entry-mood" title={moodLabel(entry.mood) || 'No mood'}>
             {entry.mood || '📝'}
@@ -42,7 +75,12 @@ export default function EntryCard({ entry, onDelete, showJournal = false, previe
         )}
       </Link>
       {onDelete && (
-        <button type="button" className="icon-btn entry-delete" onClick={() => onDelete(entry)} aria-label="Delete entry">
+        <button
+          type="button"
+          className="icon-btn entry-delete"
+          onClick={() => onDelete(entry)}
+          aria-label="Delete entry"
+        >
           <Trash2 size={18} />
         </button>
       )}

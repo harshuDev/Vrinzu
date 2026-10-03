@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import toast from 'react-hot-toast';
@@ -7,23 +7,48 @@ import { AlertCircle, ArrowLeft, Check, ImagePlus, Loader2, Smile, Tag, Trash2, 
 import ConfirmDialog from '../components/ConfirmDialog';
 import Spinner from '../components/Spinner';
 import PhotoGallery from '../components/PhotoGallery';
+import { plainToHtml } from '../lib/richText';
+import LockedPanel from '../components/LockedPanel';
+import { useJournalLock } from '../context/JournalLockContext';
 import { supabase } from '../lib/supabase';
 import { entryDisplayTitle, isEntryEmpty } from '../lib/api';
 import { AUTOSAVE_DELAY, MOODS, moodLabel } from '../lib/constants';
 import { removePhotos, uploadPhoto } from '../lib/photos';
 import { useAuth } from '../context/AuthContext';
 
-const snapshotOf = ({ title, content, mood, tags, photos }) => JSON.stringify({ title, content, mood, tags, photos });
+// The formatting editor is a large library, so it loads only when an entry opens.
+const RichEditor = lazy(() => import('../components/RichEditor'));
 
-export default function EntryEditor() {
-  const { entryId } = useParams();
+const snapshotOf = ({ title, content, contentHtml, mood, tags, photos }) =>
+  JSON.stringify({ title, content, contentHtml, mood, tags, photos });
+
+/**
+ * Writing screen. Standalone at /app/entries/:entryId, or embedded beside the
+ * entry list on wide screens (then entryId/backTo come from props and the
+ * parent hears about saves and deletes so its list stays current).
+ */
+export default function EntryEditor({
+  entryId: entryIdProp,
+  embedded = false,
+  backTo: backToProp,
+  journalOverride,
+  onSaved,
+  onDeleted,
+}) {
+  const params = useParams();
+  const entryId = entryIdProp ?? params.entryId;
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isLocked, requestUnlock } = useJournalLock();
 
   const [entry, setEntry] = useState(null);
   const [loading, setLoading] = useState(true);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [contentHtml, setContentHtml] = useState(null);
+  // False until the formatting migration has been run; then the rich editor is used.
+  const [richSupported, setRichSupported] = useState(false);
+  const [initialHtml, setInitialHtml] = useState('');
   const [mood, setMood] = useState(null);
   const [tags, setTags] = useState([]);
   const [photos, setPhotos] = useState([]);
@@ -42,13 +67,19 @@ export default function EntryEditor() {
   const loadedRef = useRef(false);
   const deletedRef = useRef(false);
   const photosSupportedRef = useRef(false);
+  const richSupportedRef = useRef(false);
+  const onSavedRef = useRef(onSaved);
+  onSavedRef.current = onSaved;
+  const onDeletedRef = useRef(onDeleted);
+  onDeletedRef.current = onDeleted;
   const textareaRef = useRef(null);
   const moodRef = useRef(null);
   const tagInputRef = useRef(null);
   const fileInputRef = useRef(null);
 
-  latestRef.current = { title, content, mood, tags, photos };
+  latestRef.current = { title, content, contentHtml, mood, tags, photos };
   photosSupportedRef.current = photosSupported;
+  richSupportedRef.current = richSupported;
 
   // ---- Load ---------------------------------------------------------------
   useEffect(() => {
@@ -57,7 +88,7 @@ export default function EntryEditor() {
     setLoading(true);
     supabase
       .from('entries')
-      .select('*, journals(id, title, cover_emoji, cover_color)')
+      .select('*, journals(*)')
       .eq('id', entryId)
       .maybeSingle()
       .then(({ data, error }) => {
@@ -67,12 +98,16 @@ export default function EntryEditor() {
           const initial = {
             title: data.title ?? '',
             content: data.content ?? '',
+            contentHtml: data.content_html ?? null,
             mood: data.mood ?? null,
             tags: data.tags ?? [],
             photos: data.photos ?? [],
           };
           setTitle(initial.title);
           setContent(initial.content);
+          setContentHtml(initial.contentHtml);
+          setRichSupported('content_html' in data);
+          setInitialHtml(initial.contentHtml || plainToHtml(initial.content));
           setMood(initial.mood);
           setTags(initial.tags);
           setPhotos(initial.photos);
@@ -101,6 +136,7 @@ export default function EntryEditor() {
       setStatus('saving');
       const fields = { title: values.title, content: values.content, mood: values.mood, tags: values.tags };
       if (photosSupportedRef.current) fields.photos = values.photos;
+      if (richSupportedRef.current) fields.content_html = values.contentHtml || null;
       const { error } = await supabase.from('entries').update(fields).eq('id', entryId);
 
       if (error) {
@@ -109,6 +145,7 @@ export default function EntryEditor() {
         return;
       }
       savedSnapshotRef.current = snapshot;
+      onSavedRef.current?.({ id: entryId, ...fields });
       setStatus(snapshotOf(latestRef.current) === snapshot ? 'saved' : 'unsaved');
     });
     return saveChainRef.current;
@@ -117,11 +154,11 @@ export default function EntryEditor() {
   // Autosave 1.5s after the last change.
   useEffect(() => {
     if (!loadedRef.current) return undefined;
-    if (snapshotOf({ title, content, mood, tags, photos }) === savedSnapshotRef.current) return undefined;
+    if (snapshotOf({ title, content, contentHtml, mood, tags, photos }) === savedSnapshotRef.current) return undefined;
     setStatus((s) => (s === 'saving' ? s : 'unsaved'));
     const timer = setTimeout(save, AUTOSAVE_DELAY);
     return () => clearTimeout(timer);
-  }, [title, content, mood, tags, photos, save]);
+  }, [title, content, contentHtml, mood, tags, photos, save]);
 
   // On leaving the page: flush pending changes, or discard the entry if it was never written in.
   useEffect(() => {
@@ -129,7 +166,12 @@ export default function EntryEditor() {
       if (!loadedRef.current || deletedRef.current) return;
       if (isEntryEmpty(latestRef.current)) {
         deletedRef.current = true;
-        supabase.from('entries').delete().eq('id', entryId).then(() => {});
+        supabase
+          .from('entries')
+          .delete()
+          .eq('id', entryId)
+          .then(() => {});
+        onDeletedRef.current?.(entryId);
       } else {
         save();
       }
@@ -178,6 +220,11 @@ export default function EntryEditor() {
     el.style.height = 'auto';
     el.style.height = `${el.scrollHeight}px`;
   }, [content, loading]);
+
+  const handleRichChange = useCallback((html, text) => {
+    setContentHtml(html || null);
+    setContent(text);
+  }, []);
 
   useEffect(() => {
     if (showTags) tagInputRef.current?.focus();
@@ -237,7 +284,8 @@ export default function EntryEditor() {
     }
     removePhotos(latestRef.current.photos).catch(() => {});
     toast.success('Entry deleted');
-    navigate(entry?.journals ? `/app/journals/${entry.journals.id}` : '/app', { replace: true });
+    onDeleted?.(entryId);
+    navigate(backToProp ?? (entry?.journals ? `/app/journals/${entry.journals.id}` : '/app'), { replace: true });
   };
 
   // ---- Render -------------------------------------------------------------
@@ -257,11 +305,29 @@ export default function EntryEditor() {
     );
   }
 
-  const backTo = entry.journals ? `/app/journals/${entry.journals.id}` : '/app';
+  // The parent's copy wins so style changes made while this entry is open show up at once.
+  const journal = journalOverride ?? entry.journals;
+  const backTo = backToProp ?? (journal ? `/app/journals/${journal.id}` : '/app');
   const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0;
+  const editorClass = `editor${embedded ? ' editor-embedded' : ''}`;
+
+  if (isLocked(journal)) {
+    return (
+      <div className={editorClass}>
+        <div className="editor-toolbar">
+          <button type="button" className="icon-btn" onClick={() => navigate(backTo)} aria-label="Back">
+            <ArrowLeft size={20} />
+          </button>
+        </div>
+        <div className="editor-paper">
+          <LockedPanel journal={journal} onUnlock={() => requestUnlock(journal)} />
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="editor">
+    <div className={editorClass}>
       <Helmet>
         <title>{entryDisplayTitle({ title, content })} · Vrinzu</title>
       </Helmet>
@@ -346,14 +412,7 @@ export default function EntryEditor() {
 
           {photosSupported && (
             <>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                multiple
-                hidden
-                onChange={handleFiles}
-              />
+              <input ref={fileInputRef} type="file" accept="image/*" multiple hidden onChange={handleFiles} />
               <button
                 type="button"
                 className={`toolbar-btn${photos.length ? ' has-value' : ''}`}
@@ -415,11 +474,15 @@ export default function EntryEditor() {
         </div>
       )}
 
-      <div className="editor-paper">
+      <div className={`editor-paper font-${journal?.font || 'sans'} paper-${journal?.paper || 'plain'}`}>
         <div className="editor-meta">
-          {entry.journals && (
-            <Link to={backTo} className="journal-pill" style={{ '--cover': entry.journals.cover_color }}>
-              {entry.journals.cover_emoji} {entry.journals.title}
+          {journal && (
+            <Link
+              to={`/app/journals/${journal.id}`}
+              className="journal-pill"
+              style={{ '--cover': journal.cover_color }}
+            >
+              {journal.cover_emoji} {journal.title}
             </Link>
           )}
           <time dateTime={entry.created_at}>{format(new Date(entry.created_at), 'EEEE, MMMM d, yyyy')}</time>
@@ -446,15 +509,23 @@ export default function EntryEditor() {
 
         <PhotoGallery paths={photos} onRemove={handleRemovePhoto} uploading={uploading} />
 
-        <textarea
-          ref={textareaRef}
-          className="editor-content"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          placeholder="Dear diary…"
-          aria-label="Entry content"
-          autoFocus={!title && !content}
-        />
+        {richSupported ? (
+          <div className="editor-rich">
+            <Suspense fallback={<div className="rich-content rich-loading" />}>
+              <RichEditor initialHtml={initialHtml} onChange={handleRichChange} autoFocus={!title && !content} />
+            </Suspense>
+          </div>
+        ) : (
+          <textarea
+            ref={textareaRef}
+            className="editor-content"
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            placeholder="Dear diary…"
+            aria-label="Entry content"
+            autoFocus={!title && !content}
+          />
+        )}
 
         <p className="editor-footer">
           {wordCount} {wordCount === 1 ? 'word' : 'words'}

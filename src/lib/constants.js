@@ -36,3 +36,19 @@ export const MOODS = [
 export const moodLabel = (emoji) => MOODS.find((m) => m.emoji === emoji)?.label ?? '';
 
 export const AUTOSAVE_DELAY = 1500;
+
+// Writing fonts a journal can use (CSS classes live in app.css as .font-<value>).
+export const JOURNAL_FONTS = [
+  { value: 'sans', label: 'Modern', sample: 'Aa' },
+  { value: 'serif', label: 'Classic', sample: 'Aa' },
+  { value: 'hand', label: 'Handwritten', sample: 'Aa' },
+  { value: 'typewriter', label: 'Typewriter', sample: 'Aa' },
+];
+
+// Page styles for the writing area (CSS classes live in app.css as .paper-<value>).
+export const JOURNAL_PAPERS = [
+  { value: 'plain', label: 'Plain' },
+  { value: 'lined', label: 'Lined' },
+  { value: 'warm', label: 'Warm paper' },
+  { value: 'dotted', label: 'Dotted' },
+];

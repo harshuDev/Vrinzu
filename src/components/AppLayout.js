@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { BookOpen, CalendarDays, House, LogOut, Search, Settings } from 'lucide-react';
 import Logo from './Logo';
 import LockScreen from './LockScreen';
+import { JournalLockProvider } from '../context/JournalLockContext';
 import { RELOCK_AFTER_MS } from '../lib/pin';
 import { useAuth } from '../context/AuthContext';
 
@@ -59,55 +60,57 @@ export default function AppLayout() {
   if (locked && hasPin) return <LockScreen onUnlock={() => setLocked(false)} />;
 
   return (
-    <div className="app-shell">
-      <aside className="sidebar">
-        <div className="sidebar-top">
-          <Logo to="/app" />
-        </div>
-        <nav className="sidebar-nav" aria-label="Main">
+    <JournalLockProvider>
+      <div className="app-shell">
+        <aside className="sidebar">
+          <div className="sidebar-top">
+            <Logo to="/app" />
+          </div>
+          <nav className="sidebar-nav" aria-label="Main">
+            {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (
+              <NavLink key={to} to={to} end={end} className="sidebar-link">
+                <Icon size={20} />
+                <span>{label}</span>
+              </NavLink>
+            ))}
+          </nav>
+          <div className="sidebar-user">
+            <Avatar name={displayName} />
+            <div className="sidebar-user-info">
+              <span className="sidebar-user-name">{displayName}</span>
+              <span className="sidebar-user-email">{user?.email}</span>
+            </div>
+            <button type="button" className="icon-btn" onClick={handleSignOut} aria-label="Sign out" title="Sign out">
+              <LogOut size={18} />
+            </button>
+          </div>
+        </aside>
+
+        <header className="mobile-header">
+          <Logo to="/app" size="sm" />
+          <div className="mobile-header-actions">
+            <button type="button" className="icon-btn" onClick={handleSignOut} aria-label="Sign out">
+              <LogOut size={20} />
+            </button>
+            <NavLink to="/app/settings" aria-label="Settings">
+              <Avatar name={displayName} size="sm" />
+            </NavLink>
+          </div>
+        </header>
+
+        <main className="app-main">
+          <Outlet />
+        </main>
+
+        <nav className="bottom-nav" aria-label="Main">
           {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (
-            <NavLink key={to} to={to} end={end} className="sidebar-link">
-              <Icon size={20} />
+            <NavLink key={to} to={to} end={end} className="bottom-nav-link">
+              <Icon size={22} />
               <span>{label}</span>
             </NavLink>
           ))}
         </nav>
-        <div className="sidebar-user">
-          <Avatar name={displayName} />
-          <div className="sidebar-user-info">
-            <span className="sidebar-user-name">{displayName}</span>
-            <span className="sidebar-user-email">{user?.email}</span>
-          </div>
-          <button type="button" className="icon-btn" onClick={handleSignOut} aria-label="Sign out" title="Sign out">
-            <LogOut size={18} />
-          </button>
-        </div>
-      </aside>
-
-      <header className="mobile-header">
-        <Logo to="/app" size="sm" />
-        <div className="mobile-header-actions">
-          <button type="button" className="icon-btn" onClick={handleSignOut} aria-label="Sign out">
-            <LogOut size={20} />
-          </button>
-          <NavLink to="/app/settings" aria-label="Settings">
-            <Avatar name={displayName} size="sm" />
-          </NavLink>
-        </div>
-      </header>
-
-      <main className="app-main">
-        <Outlet />
-      </main>
-
-      <nav className="bottom-nav" aria-label="Main">
-        {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (
-          <NavLink key={to} to={to} end={end} className="bottom-nav-link">
-            <Icon size={22} />
-            <span>{label}</span>
-          </NavLink>
-        ))}
-      </nav>
-    </div>
+      </div>
+    </JournalLockProvider>
   );
 }

@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { Check } from 'lucide-react';
+import { Check, Lock } from 'lucide-react';
 import Modal from './Modal';
 import JournalCover from './JournalCover';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-import { JOURNAL_COLORS, JOURNAL_EMOJIS } from '../lib/constants';
+import { JOURNAL_COLORS, JOURNAL_EMOJIS, JOURNAL_FONTS, JOURNAL_PAPERS } from '../lib/constants';
+import { getSchemaSupport } from '../lib/api';
 
 export default function JournalModal({ journal, onClose, onSaved }) {
   const { user } = useAuth();
@@ -14,7 +15,16 @@ export default function JournalModal({ journal, onClose, onSaved }) {
   const [description, setDescription] = useState(journal?.description ?? '');
   const [emoji, setEmoji] = useState(journal?.cover_emoji ?? JOURNAL_EMOJIS[0]);
   const [color, setColor] = useState(journal?.cover_color ?? JOURNAL_COLORS[0].value);
+  const [font, setFont] = useState(journal?.font ?? 'sans');
+  const [paper, setPaper] = useState(journal?.paper ?? 'plain');
+  const [isLocked, setIsLocked] = useState(journal?.is_locked ?? false);
+  const [styleSupported, setStyleSupported] = useState(false);
   const [saving, setSaving] = useState(false);
+  const hasPin = Boolean(user?.user_metadata?.pin_hash);
+
+  useEffect(() => {
+    getSchemaSupport().then((s) => setStyleSupported(s.journalStyle));
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -25,6 +35,7 @@ export default function JournalModal({ journal, onClose, onSaved }) {
     }
     setSaving(true);
     const fields = { title: trimmed, description: description.trim(), cover_emoji: emoji, cover_color: color };
+    if (styleSupported) Object.assign(fields, { font, paper, is_locked: isLocked && hasPin });
     const query = isEdit
       ? supabase.from('journals').update(fields).eq('id', journal.id)
       : supabase.from('journals').insert({ ...fields, user_id: user.id });
@@ -119,6 +130,66 @@ export default function JournalModal({ journal, onClose, onSaved }) {
             ))}
           </div>
         </fieldset>
+
+        {styleSupported && (
+          <>
+            <fieldset className="field">
+              <legend className="field-label">Writing font</legend>
+              <div className="style-grid">
+                {JOURNAL_FONTS.map((f) => (
+                  <button
+                    type="button"
+                    key={f.value}
+                    className={`style-option font-${f.value}${font === f.value ? ' is-selected' : ''}`}
+                    onClick={() => setFont(f.value)}
+                    aria-pressed={font === f.value}
+                  >
+                    <span className="style-sample">{f.sample}</span>
+                    <span className="style-label">{f.label}</span>
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+
+            <fieldset className="field">
+              <legend className="field-label">Page style</legend>
+              <div className="style-grid">
+                {JOURNAL_PAPERS.map((p) => (
+                  <button
+                    type="button"
+                    key={p.value}
+                    className={`style-option${paper === p.value ? ' is-selected' : ''}`}
+                    onClick={() => setPaper(p.value)}
+                    aria-pressed={paper === p.value}
+                  >
+                    <span className={`paper-swatch paper-${p.value}`} />
+                    <span className="style-label">{p.label}</span>
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+
+            <label className={`toggle-row${hasPin ? '' : ' is-disabled'}`}>
+              <span className="toggle-text">
+                <span className="toggle-title">
+                  <Lock size={16} /> Lock this journal
+                </span>
+                <span className="toggle-help">
+                  {hasPin
+                    ? 'Ask for your passcode before this journal opens.'
+                    : 'Set a passcode in Settings first to lock journals.'}
+                </span>
+              </span>
+              <input
+                type="checkbox"
+                className="toggle"
+                checked={isLocked && hasPin}
+                disabled={!hasPin}
+                onChange={(e) => setIsLocked(e.target.checked)}
+              />
+            </label>
+          </>
+        )}
       </form>
     </Modal>
   );

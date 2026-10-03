@@ -5,10 +5,7 @@ import { moodLabel } from './constants';
 import { getPhotoUrls } from './photos';
 
 export async function fetchEntriesForExport(journalId) {
-  let query = supabase
-    .from('entries')
-    .select('*, journals(title, cover_emoji)')
-    .order('created_at', { ascending: true });
+  let query = supabase.from('entries').select('*, journals(*)').order('created_at', { ascending: true });
   if (journalId) query = query.eq('journal_id', journalId);
   const { data, error } = await query;
   if (error) throw error;
@@ -16,7 +13,11 @@ export async function fetchEntriesForExport(journalId) {
 }
 
 const fileStamp = () => format(new Date(), 'yyyy-MM-dd');
-const slug = (s) => (s || 'journal').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'journal';
+const slug = (s) =>
+  (s || 'journal')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '') || 'journal';
 
 function download(filename, blob) {
   const url = URL.createObjectURL(blob);
@@ -30,7 +31,12 @@ function download(filename, blob) {
 }
 
 export function exportAsText(entries, title) {
-  const lines = [`${title}`, `Exported from Vrinzu on ${format(new Date(), 'MMMM d, yyyy')}`, `${entries.length} entries`, ''];
+  const lines = [
+    `${title}`,
+    `Exported from Vrinzu on ${format(new Date(), 'MMMM d, yyyy')}`,
+    `${entries.length} entries`,
+    '',
+  ];
   for (const e of entries) {
     lines.push('='.repeat(60));
     lines.push(format(new Date(e.created_at), "EEEE, MMMM d, yyyy 'at' h:mm a"));
@@ -40,13 +46,33 @@ export function exportAsText(entries, title) {
     if (e.photos?.length) lines.push(`Photos: ${e.photos.length}`);
     lines.push('', entryDisplayTitle(e), '', e.content?.trim() || '(no text)', '');
   }
-  download(`vrinzu-${slug(title)}-${fileStamp()}.txt`, new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' }));
+  download(
+    `vrinzu-${slug(title)}-${fileStamp()}.txt`,
+    new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' }),
+  );
 }
 
-const escapeHtml = (s) =>
-  String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const FONT_STACKS = {
+  sans: "'DM Sans', sans-serif",
+  serif: "'Lora', Georgia, serif",
+  hand: "'Caveat', cursive",
+  typewriter: "'Special Elite', 'Courier New', monospace",
+};
 
-function buildPrintDocument(entries, title, photoUrls) {
+// Formatted entries keep only the tags the editor itself can produce.
+const cleanHtml = (DOMPurify, html) =>
+  DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 's', 'ul', 'ol', 'li', 'blockquote', 'a'],
+    ALLOWED_ATTR: ['href'],
+  });
+
+const escapeHtml = (s) =>
+  String(s ?? '').replace(
+    /[&<>"']/g,
+    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c],
+  );
+
+function buildPrintDocument(entries, title, photoUrls, DOMPurify) {
   const items = entries
     .map((e) => {
       const meta = [
@@ -68,13 +94,17 @@ function buildPrintDocument(entries, title, photoUrls) {
         <h2>${escapeHtml(entryDisplayTitle(e))}</h2>
         ${tags}
         ${photos ? `<div class="photos">${photos}</div>` : ''}
-        <div class="content">${escapeHtml(e.content?.trim() || '')}</div>
+        ${
+          e.content_html
+            ? `<div class="content rich" style="font-family:${FONT_STACKS[e.journals?.font] || FONT_STACKS.sans}">${cleanHtml(DOMPurify, e.content_html)}</div>`
+            : `<div class="content" style="font-family:${FONT_STACKS[e.journals?.font] || FONT_STACKS.sans}">${escapeHtml(e.content?.trim() || '')}</div>`
+        }
       </article>`;
     })
     .join('');
 
   return `<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(title)}</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600&family=Playfair+Display:wght@600;700&family=Lora:ital@0;1&family=Caveat&family=Special+Elite&display=swap" rel="stylesheet">
 <style>
   @page { margin: 18mm 16mm; }
   body { font-family: 'DM Sans', sans-serif; color: #0f172a; line-height: 1.65; margin: 0; }
@@ -86,11 +116,15 @@ function buildPrintDocument(entries, title, photoUrls) {
   h2 { font-family: 'Playfair Display', Georgia, serif; font-size: 17pt; margin: 0 0 6px; }
   .tags { color: #0369a1; font-size: 9.5pt; margin: 0 0 8px; }
   .content { white-space: pre-wrap; font-size: 11pt; }
+  .content.rich { white-space: normal; }
+  .content.rich p { margin: 0 0 6px; }
+  .content.rich blockquote { margin: 6px 0; padding-left: 12px; border-left: 3px solid #bae6fd; color: #475569; }
+  .content a { color: #0369a1; }
   .photos { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 12px; }
   .photos img { max-width: 48%; max-height: 260px; object-fit: cover; border-radius: 6px; }
 </style></head><body>
 <header><h1>${escapeHtml(title)}</h1><p>${entries.length} entries · exported from Vrinzu on ${escapeHtml(
-    format(new Date(), 'MMMM d, yyyy')
+    format(new Date(), 'MMMM d, yyyy'),
   )}</p></header>
 ${items || '<p>No entries yet.</p>'}
 </body></html>`;
@@ -101,7 +135,10 @@ ${items || '<p>No entries yet.</p>'}
  * Choosing "Save as PDF" there produces the PDF file (supports every language and emoji).
  */
 export async function exportAsPdf(entries, title) {
-  const photoUrls = await getPhotoUrls(entries.flatMap((e) => e.photos ?? [])).catch(() => ({}));
+  const [photoUrls, { default: DOMPurify }] = await Promise.all([
+    getPhotoUrls(entries.flatMap((e) => e.photos ?? [])).catch(() => ({})),
+    import('dompurify'),
+  ]);
   const iframe = document.createElement('iframe');
   iframe.setAttribute('aria-hidden', 'true');
   iframe.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden;';
@@ -109,7 +146,7 @@ export async function exportAsPdf(entries, title) {
 
   await new Promise((resolve) => {
     iframe.onload = resolve;
-    iframe.srcdoc = buildPrintDocument(entries, title, photoUrls);
+    iframe.srcdoc = buildPrintDocument(entries, title, photoUrls, DOMPurify);
   });
 
   const doc = iframe.contentDocument;
@@ -123,7 +160,7 @@ export async function exportAsPdf(entries, title) {
           : new Promise((r) => {
               img.addEventListener('load', r, { once: true });
               img.addEventListener('error', r, { once: true });
-            })
+            }),
       ),
     ]),
     new Promise((r) => setTimeout(r, 10000)),

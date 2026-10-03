@@ -1,23 +1,32 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, NavLink, useNavigate, useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import toast from 'react-hot-toast';
-import { ArrowLeft, Download, Feather, Pencil, Plus } from 'lucide-react';
+import { format } from 'date-fns';
+import { ArrowLeft, Download, Feather, Lock, Pencil, Plus } from 'lucide-react';
 import EntryCard from '../components/EntryCard';
+import EntryEditor from './EntryEditor';
 import JournalCover from '../components/JournalCover';
 import JournalModal from '../components/JournalModal';
 import ConfirmDialog from '../components/ConfirmDialog';
 import ExportModal from '../components/ExportModal';
+import LockedPanel from '../components/LockedPanel';
 import Spinner from '../components/Spinner';
 import { supabase } from '../lib/supabase';
 import { createEntry, entryDisplayTitle } from '../lib/api';
 import { removePhotos } from '../lib/photos';
+import useMediaQuery from '../lib/useMediaQuery';
 import { useAuth } from '../context/AuthContext';
+import { useJournalLock } from '../context/JournalLockContext';
+
+const WIDE = '(min-width: 1024px)';
 
 export default function JournalDetail() {
-  const { journalId } = useParams();
+  const { journalId, entryId } = useParams();
   const { user } = useAuth();
+  const { isLocked, requestUnlock } = useJournalLock();
   const navigate = useNavigate();
+  const isWide = useMediaQuery(WIDE);
   const [journal, setJournal] = useState(null);
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -25,6 +34,9 @@ export default function JournalDetail() {
   const [editingJournal, setEditingJournal] = useState(false);
   const [deleting, setDeleting] = useState(null);
   const [exporting, setExporting] = useState(false);
+
+  const journalPath = `/app/journals/${journalId}`;
+  const entryPath = (id) => `${journalPath}/entries/${id}`;
 
   const load = useCallback(async () => {
     const [journalRes, entriesRes] = await Promise.all([
@@ -45,12 +57,20 @@ export default function JournalDetail() {
     setCreating(true);
     try {
       const entry = await createEntry(user.id, journalId);
-      navigate(`/app/entries/${entry.id}`);
+      setEntries((list) => [entry, ...list]);
+      navigate(entryPath(entry.id));
     } catch (err) {
       toast.error(err.message);
-      setCreating(false);
     }
+    setCreating(false);
   };
+
+  // Keep the list in step with the open editor.
+  const handleSaved = useCallback(
+    (fields) => setEntries((list) => list.map((e) => (e.id === fields.id ? { ...e, ...fields } : e))),
+    [],
+  );
+  const handleRemoved = useCallback((id) => setEntries((list) => list.filter((e) => e.id !== id)), []);
 
   const handleDelete = async () => {
     const { error } = await supabase.from('entries').delete().eq('id', deleting.id);
@@ -60,7 +80,8 @@ export default function JournalDetail() {
     }
     removePhotos(deleting.photos).catch(() => {});
     toast.success('Entry deleted');
-    setEntries((list) => list.filter((e) => e.id !== deleting.id));
+    handleRemoved(deleting.id);
+    if (deleting.id === entryId) navigate(journalPath, { replace: true });
   };
 
   if (loading) return <Spinner />;
@@ -75,6 +96,139 @@ export default function JournalDetail() {
             Back to journals
           </Link>
         </div>
+      </div>
+    );
+  }
+
+  if (isLocked(journal)) {
+    return (
+      <div className="page">
+        <Helmet>
+          <title>Locked journal · Vrinzu</title>
+        </Helmet>
+        <Link to="/app/journals" className="back-link">
+          <ArrowLeft size={18} /> All journals
+        </Link>
+        <LockedPanel journal={journal} onUnlock={() => requestUnlock(journal)} />
+      </div>
+    );
+  }
+
+  const editor = entryId && (
+    <EntryEditor
+      key={entryId}
+      entryId={entryId}
+      embedded={isWide}
+      backTo={journalPath}
+      journalOverride={journal}
+      onSaved={handleSaved}
+      onDeleted={handleRemoved}
+    />
+  );
+
+  const modals = (
+    <>
+      {editingJournal && (
+        <JournalModal journal={journal} onClose={() => setEditingJournal(false)} onSaved={(j) => setJournal(j)} />
+      )}
+      {exporting && <ExportModal journal={journal} onClose={() => setExporting(false)} />}
+      {deleting && (
+        <ConfirmDialog
+          title="Delete entry?"
+          message={`“${entryDisplayTitle(deleting)}” will be permanently deleted.`}
+          confirmLabel="Delete entry"
+          onConfirm={handleDelete}
+          onClose={() => setDeleting(null)}
+        />
+      )}
+    </>
+  );
+
+  // Phones and tablets: an open entry takes the whole screen.
+  if (!isWide && entryId) return editor;
+
+  // Wide screens: the journal's entries on the left, the open page on the right.
+  if (isWide) {
+    return (
+      <div className="journal-split">
+        <Helmet>
+          <title>{journal.title} · Vrinzu</title>
+        </Helmet>
+        <aside className="journal-pane">
+          <div className="journal-pane-head" style={{ '--cover': journal.cover_color }}>
+            <Link to="/app/journals" className="back-link">
+              <ArrowLeft size={16} /> All journals
+            </Link>
+            <div className="journal-pane-title">
+              <JournalCover color={journal.cover_color} emoji={journal.cover_emoji} size="xs" />
+              <div>
+                <h1>
+                  {journal.title} {journal.is_locked && <Lock size={14} aria-label="Locked" />}
+                </h1>
+                <p>
+                  {entries.length} {entries.length === 1 ? 'entry' : 'entries'}
+                </p>
+              </div>
+            </div>
+            <div className="journal-pane-actions">
+              <button type="button" className="btn btn-primary" onClick={handleNewEntry} disabled={creating}>
+                <Plus size={18} /> {creating ? 'Creating…' : 'New Entry'}
+              </button>
+              <button
+                type="button"
+                className="icon-btn"
+                onClick={() => setEditingJournal(true)}
+                aria-label="Edit journal"
+                title="Edit journal"
+              >
+                <Pencil size={18} />
+              </button>
+              <button
+                type="button"
+                className="icon-btn"
+                onClick={() => setExporting(true)}
+                aria-label="Export journal"
+                title="Export journal"
+              >
+                <Download size={18} />
+              </button>
+            </div>
+          </div>
+          <nav className="entry-index" aria-label="Entries">
+            {entries.length === 0 && <p className="entry-index-empty">No entries yet. Start with a new one.</p>}
+            {entries.map((e) => {
+              const d = new Date(e.created_at);
+              return (
+                <NavLink key={e.id} to={entryPath(e.id)} className="entry-index-item">
+                  <span className="entry-index-date">
+                    <strong>{format(d, 'd')}</strong>
+                    {format(d, 'MMM')}
+                  </span>
+                  <span className="entry-index-text">
+                    <span className="entry-index-title">{entryDisplayTitle(e)}</span>
+                    <span className="entry-index-preview">{e.content?.trim() || 'No content yet…'}</span>
+                  </span>
+                  {e.mood && <span className="entry-index-mood">{e.mood}</span>}
+                </NavLink>
+              );
+            })}
+          </nav>
+        </aside>
+        <section className="journal-page">
+          {editor || (
+            <div className="journal-page-empty">
+              <span className="empty-icon">
+                <Feather size={28} />
+              </span>
+              <h2>{entries.length ? 'Pick an entry to read' : 'Every story starts with a blank page'}</h2>
+              <p>{entries.length ? 'Or start a fresh page for today.' : 'Write the first entry in this journal.'}</p>
+              <button type="button" className="btn btn-primary" onClick={handleNewEntry} disabled={creating}>
+                <Plus size={18} /> New Entry
+              </button>
+            </div>
+          )}
+        </section>
+        {modals}
       </div>
     );
   }
@@ -125,24 +279,11 @@ export default function JournalDetail() {
       ) : (
         <div className="entry-list">
           {entries.map((entry) => (
-            <EntryCard key={entry.id} entry={entry} onDelete={setDeleting} />
+            <EntryCard key={entry.id} entry={entry} to={entryPath(entry.id)} onDelete={setDeleting} />
           ))}
         </div>
       )}
-
-      {editingJournal && (
-        <JournalModal journal={journal} onClose={() => setEditingJournal(false)} onSaved={(j) => setJournal(j)} />
-      )}
-      {exporting && <ExportModal journal={journal} onClose={() => setExporting(false)} />}
-      {deleting && (
-        <ConfirmDialog
-          title="Delete entry?"
-          message={`“${entryDisplayTitle(deleting)}” will be permanently deleted.`}
-          confirmLabel="Delete entry"
-          onConfirm={handleDelete}
-          onClose={() => setDeleting(null)}
-        />
-      )}
+      {modals}
     </div>
   );
 }

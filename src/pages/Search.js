@@ -5,6 +5,7 @@ import { Search as SearchIcon, X } from 'lucide-react';
 import EntryCard from '../components/EntryCard';
 import Spinner from '../components/Spinner';
 import { supabase } from '../lib/supabase';
+import { useJournalLock } from '../context/JournalLockContext';
 
 // Characters that have meaning inside a PostgREST `or=(...)` filter or an ILIKE pattern.
 const sanitize = (q) => q.replace(/[,()%_*\\"]/g, ' ').trim();
@@ -41,6 +42,10 @@ export default function Search() {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState('');
+  const { isLocked } = useJournalLock();
+  // Matches inside locked journals stay hidden so a search can't reveal what they say.
+  const visible = results.filter((e) => !isLocked(e.journals));
+  const hiddenCount = results.length - visible.length;
 
   useEffect(() => {
     const q = sanitize(query);
@@ -55,7 +60,7 @@ export default function Search() {
     const timer = setTimeout(async () => {
       const { data, error } = await supabase
         .from('entries')
-        .select('*, journals(title, cover_emoji, cover_color)')
+        .select('*, journals(*)')
         .or(`title.ilike.%${q}%,content.ilike.%${q}%`)
         .order('created_at', { ascending: false })
         .limit(50);
@@ -107,9 +112,10 @@ export default function Search() {
       ) : searched ? (
         <>
           <p className="search-count">
-            {results.length} {results.length === 1 ? 'result' : 'results'} for “{searched}”
+            {visible.length} {visible.length === 1 ? 'result' : 'results'} for “{searched}”
+            {hiddenCount > 0 && ` · ${hiddenCount} in locked journals`}
           </p>
-          {results.length === 0 ? (
+          {visible.length === 0 ? (
             <div className="empty-state">
               <span className="empty-icon">
                 <SearchIcon size={28} />
@@ -119,7 +125,7 @@ export default function Search() {
             </div>
           ) : (
             <div className="entry-list">
-              {results.map((entry) => (
+              {visible.map((entry) => (
                 <EntryCard
                   key={entry.id}
                   entry={entry}
