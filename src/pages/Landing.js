@@ -122,7 +122,7 @@ export default function Landing() {
                   src="/hero/desktop-light.webp"
                   width="1600"
                   height="1000"
-                  alt="The Vrinzu writing screen showing an entry titled A quiet morning by the sea"
+                  alt="The Vrinzu writing screen showing an entry titled Myself"
                   fetchpriority="high"
                 />
               </picture>
