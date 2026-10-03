@@ -2,9 +2,12 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import toast from 'react-hot-toast';
-import { KeyRound, LogOut, User } from 'lucide-react';
+import { Download, KeyRound, Lock, LogOut, Monitor, Moon, Palette, Sun, User } from 'lucide-react';
 import PasswordInput from '../components/PasswordInput';
 import { Avatar } from '../components/AppLayout';
+import ExportModal from '../components/ExportModal';
+import { hashPin, isValidPin } from '../lib/pin';
+import { applyTheme } from '../lib/theme';
 import { useAuth } from '../context/AuthContext';
 
 export default function Settings() {
@@ -15,6 +18,77 @@ export default function Settings() {
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [savingPassword, setSavingPassword] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const themePref = user?.user_metadata?.theme || 'system';
+  const hasPin = Boolean(user?.user_metadata?.pin_hash);
+  const [pinMode, setPinMode] = useState(null); // null | 'set' | 'remove'
+  const [newPin, setNewPin] = useState('');
+  const [confirmPin, setConfirmPin] = useState('');
+  const [currentPin, setCurrentPin] = useState('');
+  const [savingPin, setSavingPin] = useState(false);
+
+  const changeTheme = async (theme) => {
+    applyTheme(theme); // instant feedback; saved to the account below
+    try {
+      await updateProfile({ data: { theme } });
+    } catch (err) {
+      applyTheme(themePref);
+      toast.error(err.message);
+    }
+  };
+
+  const resetPinForm = () => {
+    setPinMode(null);
+    setNewPin('');
+    setConfirmPin('');
+    setCurrentPin('');
+  };
+
+  const handlePin = async (e) => {
+    e.preventDefault();
+    setSavingPin(true);
+    try {
+      if (hasPin) {
+        if ((await hashPin(currentPin, user.id)) !== user.user_metadata.pin_hash) {
+          toast.error('Current passcode is incorrect');
+          setSavingPin(false);
+          return;
+        }
+      }
+      if (pinMode === 'remove') {
+        await updateProfile({ data: { pin_hash: null, pin_length: null } });
+        toast.success('Passcode lock turned off');
+      } else {
+        if (!isValidPin(newPin)) throw new Error('Passcode must be 4 to 6 digits');
+        if (newPin !== confirmPin) throw new Error('Passcodes do not match');
+        const pin_hash = await hashPin(newPin, user.id);
+        await updateProfile({ data: { pin_hash, pin_length: newPin.length } });
+        toast.success(hasPin ? 'Passcode changed' : 'Passcode lock turned on');
+      }
+      resetPinForm();
+    } catch (err) {
+      toast.error(err.message);
+    }
+    setSavingPin(false);
+  };
+
+  const pinInput = (value, setValue, label, autoFocus = false) => (
+    <label className="field">
+      <span className="field-label">{label}</span>
+      <input
+        className="input pin-input"
+        type="password"
+        inputMode="numeric"
+        autoComplete="off"
+        pattern="[0-9]*"
+        maxLength={6}
+        value={value}
+        onChange={(e) => setValue(e.target.value.replace(/\D/g, ''))}
+        placeholder="••••"
+        autoFocus={autoFocus}
+      />
+    </label>
+  );
 
   const handleName = async (e) => {
     e.preventDefault();
@@ -75,6 +149,86 @@ export default function Settings() {
         </div>
       </section>
 
+      <section className="settings-card">
+        <h2 className="settings-heading">
+          <Palette size={18} /> Appearance
+        </h2>
+        <div className="segmented" role="radiogroup" aria-label="Theme">
+          {[
+            { value: 'system', label: 'System', icon: Monitor },
+            { value: 'light', label: 'Light', icon: Sun },
+            { value: 'dark', label: 'Dark', icon: Moon },
+          ].map(({ value, label, icon: Icon }) => (
+            <button
+              type="button"
+              key={value}
+              role="radio"
+              aria-checked={themePref === value}
+              className={`segmented-option${themePref === value ? ' is-selected' : ''}`}
+              onClick={() => changeTheme(value)}
+            >
+              <Icon size={16} /> {label}
+            </button>
+          ))}
+        </div>
+        <p className="settings-help">“System” follows your device’s light or dark setting. Saved to your account.</p>
+      </section>
+
+      <section className="settings-card">
+        <h2 className="settings-heading">
+          <Lock size={18} /> Passcode lock
+        </h2>
+        <p className="settings-help">
+          {hasPin
+            ? 'On. Vrinzu asks for your passcode when it opens and after a minute in the background.'
+            : 'Ask for a 4–6 digit passcode whenever Vrinzu opens — handy on a shared device.'}
+        </p>
+        {pinMode ? (
+          <form className="pin-form" onSubmit={handlePin}>
+            {hasPin && pinInput(currentPin, setCurrentPin, 'Current passcode', true)}
+            {pinMode === 'set' && (
+              <>
+                {pinInput(newPin, setNewPin, hasPin ? 'New passcode' : 'Passcode (4–6 digits)', !hasPin)}
+                {pinInput(confirmPin, setConfirmPin, 'Confirm passcode')}
+              </>
+            )}
+            <div className="pin-form-actions">
+              <button type="button" className="btn btn-ghost" onClick={resetPinForm}>
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className={`btn ${pinMode === 'remove' ? 'btn-danger' : 'btn-primary'}`}
+                disabled={savingPin}
+              >
+                {savingPin ? 'Saving…' : pinMode === 'remove' ? 'Turn off' : 'Save passcode'}
+              </button>
+            </div>
+          </form>
+        ) : (
+          <div className="pin-form-actions">
+            <button type="button" className="btn btn-primary" onClick={() => setPinMode('set')}>
+              <Lock size={16} /> {hasPin ? 'Change passcode' : 'Set a passcode'}
+            </button>
+            {hasPin && (
+              <button type="button" className="btn btn-danger-outline" onClick={() => setPinMode('remove')}>
+                Turn off
+              </button>
+            )}
+          </div>
+        )}
+      </section>
+
+      <section className="settings-card">
+        <h2 className="settings-heading">
+          <Download size={18} /> Export
+        </h2>
+        <p className="settings-help">Download your journals as a PDF document or a plain text file.</p>
+        <button type="button" className="btn btn-outline" onClick={() => setExporting(true)}>
+          <Download size={16} /> Export journals
+        </button>
+      </section>
+
       <form className="settings-card" onSubmit={handleName}>
         <h2 className="settings-heading">
           <User size={18} /> Display name
@@ -132,6 +286,8 @@ export default function Settings() {
           <LogOut size={18} /> Sign out
         </button>
       </section>
+
+      {exporting && <ExportModal onClose={() => setExporting(false)} />}
     </div>
   );
 }

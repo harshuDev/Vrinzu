@@ -27,6 +27,21 @@
       rel="stylesheet"
     />
 
+    <script>
+      // Apply the signed-in user's saved theme before first paint (avoids a light flash).
+      (function () {
+        try {
+          for (var i = 0; i < localStorage.length; i++) {
+            var key = localStorage.key(i);
+            if (/^sb-.*-auth-token$/.test(key)) {
+              var theme = JSON.parse(localStorage.getItem(key)).user.user_metadata.theme;
+              if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
+            }
+          }
+        } catch (e) {}
+      })();
+    </script>
+
     <title>Vrinzu — Your private online journal</title>
   </head>
   <body>

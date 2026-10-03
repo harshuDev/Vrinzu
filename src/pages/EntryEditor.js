@@ -3,18 +3,22 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
-import { AlertCircle, ArrowLeft, Check, Loader2, Smile, Tag, Trash2, X } from 'lucide-react';
+import { AlertCircle, ArrowLeft, Check, ImagePlus, Loader2, Smile, Tag, Trash2, X } from 'lucide-react';
 import ConfirmDialog from '../components/ConfirmDialog';
 import Spinner from '../components/Spinner';
+import PhotoGallery from '../components/PhotoGallery';
 import { supabase } from '../lib/supabase';
 import { entryDisplayTitle, isEntryEmpty } from '../lib/api';
 import { AUTOSAVE_DELAY, MOODS, moodLabel } from '../lib/constants';
+import { removePhotos, uploadPhoto } from '../lib/photos';
+import { useAuth } from '../context/AuthContext';
 
-const snapshotOf = ({ title, content, mood, tags }) => JSON.stringify({ title, content, mood, tags });
+const snapshotOf = ({ title, content, mood, tags, photos }) => JSON.stringify({ title, content, mood, tags, photos });
 
 export default function EntryEditor() {
   const { entryId } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [entry, setEntry] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -22,6 +26,10 @@ export default function EntryEditor() {
   const [content, setContent] = useState('');
   const [mood, setMood] = useState(null);
   const [tags, setTags] = useState([]);
+  const [photos, setPhotos] = useState([]);
+  // False until the photos migration has been run on the database.
+  const [photosSupported, setPhotosSupported] = useState(false);
+  const [uploading, setUploading] = useState(0);
   const [tagInput, setTagInput] = useState('');
   const [status, setStatus] = useState('saved'); // saved | unsaved | saving | error
   const [showMoods, setShowMoods] = useState(false);
@@ -33,11 +41,14 @@ export default function EntryEditor() {
   const saveChainRef = useRef(Promise.resolve());
   const loadedRef = useRef(false);
   const deletedRef = useRef(false);
+  const photosSupportedRef = useRef(false);
   const textareaRef = useRef(null);
   const moodRef = useRef(null);
   const tagInputRef = useRef(null);
+  const fileInputRef = useRef(null);
 
-  latestRef.current = { title, content, mood, tags };
+  latestRef.current = { title, content, mood, tags, photos };
+  photosSupportedRef.current = photosSupported;
 
   // ---- Load ---------------------------------------------------------------
   useEffect(() => {
@@ -53,11 +64,19 @@ export default function EntryEditor() {
         if (cancelled) return;
         if (error) toast.error(error.message);
         if (data) {
-          const initial = { title: data.title ?? '', content: data.content ?? '', mood: data.mood ?? null, tags: data.tags ?? [] };
+          const initial = {
+            title: data.title ?? '',
+            content: data.content ?? '',
+            mood: data.mood ?? null,
+            tags: data.tags ?? [],
+            photos: data.photos ?? [],
+          };
           setTitle(initial.title);
           setContent(initial.content);
           setMood(initial.mood);
           setTags(initial.tags);
+          setPhotos(initial.photos);
+          setPhotosSupported(Array.isArray(data.photos));
           savedSnapshotRef.current = snapshotOf(initial);
           latestRef.current = initial;
           loadedRef.current = true;
@@ -80,10 +99,9 @@ export default function EntryEditor() {
       if (snapshot === savedSnapshotRef.current) return;
 
       setStatus('saving');
-      const { error } = await supabase
-        .from('entries')
-        .update({ title: values.title, content: values.content, mood: values.mood, tags: values.tags })
-        .eq('id', entryId);
+      const fields = { title: values.title, content: values.content, mood: values.mood, tags: values.tags };
+      if (photosSupportedRef.current) fields.photos = values.photos;
+      const { error } = await supabase.from('entries').update(fields).eq('id', entryId);
 
       if (error) {
         setStatus('error');
@@ -99,11 +117,11 @@ export default function EntryEditor() {
   // Autosave 1.5s after the last change.
   useEffect(() => {
     if (!loadedRef.current) return undefined;
-    if (snapshotOf({ title, content, mood, tags }) === savedSnapshotRef.current) return undefined;
+    if (snapshotOf({ title, content, mood, tags, photos }) === savedSnapshotRef.current) return undefined;
     setStatus((s) => (s === 'saving' ? s : 'unsaved'));
     const timer = setTimeout(save, AUTOSAVE_DELAY);
     return () => clearTimeout(timer);
-  }, [title, content, mood, tags, save]);
+  }, [title, content, mood, tags, photos, save]);
 
   // On leaving the page: flush pending changes, or discard the entry if it was never written in.
   useEffect(() => {
@@ -186,6 +204,28 @@ export default function EntryEditor() {
     }
   };
 
+  // ---- Photos -------------------------------------------------------------
+  const handleFiles = async (e) => {
+    const files = Array.from(e.target.files || []).filter((f) => f.type.startsWith('image/'));
+    e.target.value = '';
+    if (!files.length) return;
+    setUploading(files.length);
+    for (const file of files) {
+      try {
+        const path = await uploadPhoto(user.id, entryId, file);
+        setPhotos((p) => [...p, path]);
+      } catch (err) {
+        toast.error(`Couldn’t upload ${file.name}: ${err.message}`);
+      }
+      setUploading((n) => n - 1);
+    }
+  };
+
+  const handleRemovePhoto = (path) => {
+    setPhotos((p) => p.filter((x) => x !== path));
+    removePhotos([path]).catch(() => {});
+  };
+
   // ---- Delete -------------------------------------------------------------
   const handleDelete = async () => {
     deletedRef.current = true;
@@ -195,6 +235,7 @@ export default function EntryEditor() {
       toast.error(error.message);
       throw error;
     }
+    removePhotos(latestRef.current.photos).catch(() => {});
     toast.success('Entry deleted');
     navigate(entry?.journals ? `/app/journals/${entry.journals.id}` : '/app', { replace: true });
   };
@@ -231,17 +272,22 @@ export default function EntryEditor() {
         </button>
 
         <span className={`save-status save-status-${status}`} aria-live="polite">
-          {status === 'saving' && (
+          {uploading > 0 && (
+            <>
+              <Loader2 size={14} className="spin" /> Uploading {uploading} photo{uploading > 1 ? 's' : ''}…
+            </>
+          )}
+          {!uploading && status === 'saving' && (
             <>
               <Loader2 size={14} className="spin" /> Saving…
             </>
           )}
-          {status === 'saved' && (
+          {!uploading && status === 'saved' && (
             <>
               <Check size={14} /> Saved
             </>
           )}
-          {status === 'unsaved' && <>Editing…</>}
+          {!uploading && status === 'unsaved' && <>Editing…</>}
           {status === 'error' && (
             <button type="button" className="link-btn" onClick={save}>
               <AlertCircle size={14} /> Retry save
@@ -297,6 +343,30 @@ export default function EntryEditor() {
               </div>
             )}
           </div>
+
+          {photosSupported && (
+            <>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                hidden
+                onChange={handleFiles}
+              />
+              <button
+                type="button"
+                className={`toolbar-btn${photos.length ? ' has-value' : ''}`}
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading > 0}
+                aria-label="Add photos"
+                title="Add photos"
+              >
+                <ImagePlus size={20} />
+                <span className="toolbar-btn-label">Photos{photos.length ? ` (${photos.length})` : ''}</span>
+              </button>
+            </>
+          )}
 
           <button
             type="button"
@@ -373,6 +443,8 @@ export default function EntryEditor() {
             ))}
           </div>
         )}
+
+        <PhotoGallery paths={photos} onRemove={handleRemovePhoto} uploading={uploading} />
 
         <textarea
           ref={textareaRef}

@@ -2,14 +2,16 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import toast from 'react-hot-toast';
-import { ArrowLeft, Feather, Pencil, Plus } from 'lucide-react';
+import { ArrowLeft, Download, Feather, Pencil, Plus } from 'lucide-react';
 import EntryCard from '../components/EntryCard';
 import JournalCover from '../components/JournalCover';
 import JournalModal from '../components/JournalModal';
 import ConfirmDialog from '../components/ConfirmDialog';
+import ExportModal from '../components/ExportModal';
 import Spinner from '../components/Spinner';
 import { supabase } from '../lib/supabase';
 import { createEntry, entryDisplayTitle } from '../lib/api';
+import { removePhotos } from '../lib/photos';
 import { useAuth } from '../context/AuthContext';
 
 export default function JournalDetail() {
@@ -22,6 +24,7 @@ export default function JournalDetail() {
   const [creating, setCreating] = useState(false);
   const [editingJournal, setEditingJournal] = useState(false);
   const [deleting, setDeleting] = useState(null);
+  const [exporting, setExporting] = useState(false);
 
   const load = useCallback(async () => {
     const [journalRes, entriesRes] = await Promise.all([
@@ -55,6 +58,7 @@ export default function JournalDetail() {
       toast.error(error.message);
       throw error;
     }
+    removePhotos(deleting.photos).catch(() => {});
     toast.success('Entry deleted');
     setEntries((list) => list.filter((e) => e.id !== deleting.id));
   };
@@ -98,6 +102,9 @@ export default function JournalDetail() {
           <button type="button" className="btn btn-ghost" onClick={() => setEditingJournal(true)}>
             <Pencil size={16} /> Edit
           </button>
+          <button type="button" className="btn btn-ghost" onClick={() => setExporting(true)}>
+            <Download size={16} /> Export
+          </button>
           <button type="button" className="btn btn-primary" onClick={handleNewEntry} disabled={creating}>
             <Plus size={18} /> {creating ? 'Creating…' : 'New Entry'}
           </button>
@@ -126,6 +133,7 @@ export default function JournalDetail() {
       {editingJournal && (
         <JournalModal journal={journal} onClose={() => setEditingJournal(false)} onSaved={(j) => setJournal(j)} />
       )}
+      {exporting && <ExportModal journal={journal} onClose={() => setExporting(false)} />}
       {deleting && (
         <ConfirmDialog
           title="Delete entry?"

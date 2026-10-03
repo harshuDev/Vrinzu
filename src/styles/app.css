@@ -46,8 +46,8 @@
 }
 
 .sidebar-link.active {
-  background: var(--ocean-50);
-  color: var(--ocean-700);
+  background: var(--tint);
+  color: var(--accent-text);
 }
 
 .sidebar-link.active svg {
@@ -168,7 +168,7 @@
 }
 
 .back-link:hover {
-  color: var(--ocean-700);
+  color: var(--accent-text);
 }
 
 /* ---------- Empty states ---------- */
@@ -207,7 +207,7 @@
   width: 64px;
   height: 64px;
   border-radius: 50%;
-  background: var(--ocean-50);
+  background: var(--tint);
   color: var(--ocean-600);
 }
 
@@ -235,7 +235,7 @@
   right: -80px;
   top: -140px;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--surface) 10%, transparent);
+  background: color-mix(in srgb, var(--text-on-primary) 10%, transparent);
   pointer-events: none;
 }
 
@@ -282,7 +282,7 @@
   font-family: var(--font-display);
   font-size: 2.1rem;
   font-weight: 700;
-  color: var(--ocean-700);
+  color: var(--accent-text);
   line-height: 1.1;
 }
 
@@ -350,7 +350,7 @@
 
 .mini-journal:hover {
   color: var(--text-primary);
-  border-color: var(--ocean-200);
+  border-color: var(--tint-border);
   box-shadow: var(--shadow-sm);
 }
 
@@ -364,9 +364,9 @@
   overflow: hidden;
   background: linear-gradient(
     135deg,
-    color-mix(in srgb, var(--cover) 85%, var(--surface)),
+    color-mix(in srgb, var(--cover) 85%, var(--text-on-primary)),
     var(--cover) 55%,
-    color-mix(in srgb, var(--cover) 70%, var(--text-primary))
+    color-mix(in srgb, var(--cover) 70%, var(--ink))
   );
 }
 
@@ -376,7 +376,7 @@
   inset: 0;
   background: radial-gradient(
     circle at 80% 15%,
-    color-mix(in srgb, var(--surface) 28%, transparent),
+    color-mix(in srgb, var(--text-on-primary) 28%, transparent),
     transparent 45%
   );
 }
@@ -385,15 +385,15 @@
   position: absolute;
   inset: 0 auto 0 0;
   width: 14px;
-  background: color-mix(in srgb, var(--cover) 60%, var(--text-primary));
-  box-shadow: inset -2px 0 0 color-mix(in srgb, var(--surface) 18%, transparent);
+  background: color-mix(in srgb, var(--cover) 60%, var(--ink));
+  box-shadow: inset -2px 0 0 color-mix(in srgb, var(--text-on-primary) 18%, transparent);
 }
 
 .journal-cover-emoji {
   position: relative;
   z-index: 1;
   font-size: 3.4rem;
-  filter: drop-shadow(0 6px 10px color-mix(in srgb, var(--text-primary) 25%, transparent));
+  filter: drop-shadow(0 6px 10px color-mix(in srgb, var(--shadow-ink) 25%, transparent));
 }
 
 .journal-cover-sm {
@@ -527,12 +527,12 @@
 }
 
 .emoji-option:hover {
-  background: var(--ocean-50);
+  background: var(--tint);
 }
 
 .emoji-option.is-selected {
   border-color: var(--ocean-500);
-  background: var(--ocean-50);
+  background: var(--tint);
   transform: scale(1.05);
 }
 
@@ -612,7 +612,7 @@
 }
 
 .entry-card:hover {
-  border-color: var(--ocean-200);
+  border-color: var(--tint-border);
   box-shadow: var(--shadow-md);
 }
 
@@ -643,7 +643,7 @@
   height: 44px;
   flex-shrink: 0;
   border-radius: var(--radius-md);
-  background: var(--ocean-50);
+  background: var(--tint);
   font-size: 1.5rem;
 }
 
@@ -759,14 +759,14 @@
 }
 
 .toolbar-btn:hover {
-  background: var(--ocean-50);
-  color: var(--ocean-700);
+  background: var(--tint);
+  color: var(--accent-text);
 }
 
 .toolbar-btn.has-value {
-  background: var(--ocean-50);
-  border-color: var(--ocean-100);
-  color: var(--ocean-700);
+  background: var(--tint);
+  border-color: var(--tint-strong);
+  color: var(--accent-text);
 }
 
 .toolbar-emoji {
@@ -817,13 +817,13 @@
 }
 
 .mood-option:hover {
-  background: var(--ocean-50);
+  background: var(--tint);
   transform: scale(1.08);
 }
 
 .mood-option.is-selected {
   border-color: var(--ocean-500);
-  background: var(--ocean-50);
+  background: var(--tint);
 }
 
 .mood-clear {
@@ -843,13 +843,13 @@
   gap: 8px;
   padding: 10px 16px;
   background: var(--surface-ocean);
-  border-bottom: 1px solid var(--ocean-100);
+  border-bottom: 1px solid var(--tint-strong);
 }
 
 .tag-removable {
   padding-right: 2px;
   background: var(--surface);
-  border: 1px solid var(--ocean-100);
+  border: 1px solid var(--tint-strong);
 }
 
 .tag-removable button {
@@ -865,7 +865,7 @@
 }
 
 .tag-removable button:hover {
-  background: var(--ocean-100);
+  background: var(--tint-strong);
 }
 
 .tag-input {
@@ -1048,6 +1048,462 @@
   color: var(--text-secondary);
 }
 
+/* ---------- Photos ---------- */
+.tag-photos {
+  gap: 4px;
+}
+
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.photo-thumb {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  color: var(--text-muted);
+}
+
+.photo-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.2s ease;
+}
+
+.photo-thumb:hover img {
+  transform: scale(1.04);
+}
+
+.photo-uploading .spinner {
+  width: 26px;
+  height: 26px;
+}
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: grid;
+  place-items: center;
+  padding: calc(64px + var(--safe-top)) 16px calc(24px + var(--safe-bottom));
+  background: color-mix(in srgb, var(--ink) 92%, transparent);
+  animation: fade-in 0.15s ease;
+}
+
+.lightbox-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg);
+}
+
+.lightbox-bar {
+  position: absolute;
+  inset: var(--safe-top) 0 auto 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px 10px 20px;
+  color: var(--text-on-primary);
+  font-weight: 600;
+}
+
+.lightbox-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.lightbox-btn,
+.lightbox-btn:hover {
+  color: var(--text-on-primary);
+  background: color-mix(in srgb, var(--text-on-primary) 12%, transparent);
+}
+
+.lightbox-prev,
+.lightbox-next {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 52px;
+  height: 52px;
+}
+
+.lightbox-prev {
+  left: 12px;
+}
+
+.lightbox-next {
+  right: 12px;
+}
+
+/* ---------- Calendar ---------- */
+.calendar {
+  padding: 18px;
+  margin-bottom: 28px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.calendar-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.calendar-title {
+  text-align: center;
+}
+
+.calendar-title h2 {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+}
+
+.calendar-title span {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.calendar-today {
+  display: flex;
+  margin: 0 auto;
+  font-size: 0.9rem;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 14px;
+}
+
+.calendar-weekday {
+  padding-bottom: 4px;
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.calendar-day {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 2px;
+  min-height: 72px;
+  padding: 8px 2px 6px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  color: var(--text-secondary);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.calendar-day:hover {
+  border-color: var(--tint-border);
+}
+
+.calendar-day.is-outside {
+  opacity: 0.4;
+}
+
+.calendar-day.has-entries {
+  background: var(--tint);
+  color: var(--text-primary);
+}
+
+.calendar-day.is-today .calendar-num {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--ocean-600);
+  color: var(--text-on-primary);
+}
+
+.calendar-day.is-selected {
+  border-color: var(--ocean-500);
+  box-shadow: inset 0 0 0 1px var(--ocean-500);
+}
+
+.calendar-num {
+  font-weight: 700;
+  font-size: 0.9rem;
+  line-height: 26px;
+}
+
+.calendar-mark {
+  font-size: 1.35rem;
+  line-height: 1;
+  color: var(--ocean-500);
+}
+
+.calendar-count {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  min-width: 18px;
+  padding: 0 5px;
+  border-radius: var(--radius-full);
+  background: var(--ocean-600);
+  color: var(--text-on-primary);
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 18px;
+}
+
+/* ---------- Settings additions ---------- */
+.segmented {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  width: 100%;
+  max-width: 420px;
+  padding: 4px;
+  border-radius: var(--radius-full);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+
+.segmented-option {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 40px;
+  border: none;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.segmented-option.is-selected {
+  background: var(--surface);
+  color: var(--accent-text);
+  box-shadow: var(--shadow-sm);
+}
+
+.pin-form {
+  display: grid;
+  gap: 14px;
+  width: 100%;
+  max-width: 320px;
+}
+
+.pin-input {
+  letter-spacing: 0.4em;
+  font-size: 1.2rem;
+}
+
+.pin-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* ---------- Export ---------- */
+.export-body {
+  display: grid;
+  gap: 12px;
+}
+
+.export-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  width: 100%;
+  min-height: var(--touch);
+  padding: 16px;
+  text-align: left;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text-primary);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.export-option:hover:not(:disabled) {
+  border-color: var(--tint-border);
+  background: var(--tint);
+}
+
+.export-option svg {
+  flex-shrink: 0;
+  color: var(--ocean-600);
+  margin-top: 2px;
+}
+
+.export-option span {
+  display: grid;
+  gap: 2px;
+}
+
+.export-option small {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.export-option:disabled {
+  opacity: 0.6;
+}
+
+/* ---------- Lock screen ---------- */
+.lock-screen {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: calc(24px + var(--safe-top)) var(--gutter) calc(24px + var(--safe-bottom));
+  background: linear-gradient(160deg, var(--ocean-700), var(--ocean-900) 60%, var(--ocean-950));
+  color: var(--text-on-primary);
+}
+
+.lock-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 340px;
+  text-align: center;
+}
+
+.lock-icon {
+  display: grid;
+  place-items: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--text-on-primary) 14%, transparent);
+}
+
+.lock-card h1 {
+  margin-top: 16px;
+  font-family: var(--font-display);
+  font-size: 1.7rem;
+  color: var(--text-on-primary);
+}
+
+.lock-subtitle,
+.lock-forgot p {
+  margin-top: 6px;
+  color: var(--ocean-100);
+}
+
+.pin-dots {
+  display: flex;
+  gap: 16px;
+  margin-top: 28px;
+}
+
+.pin-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--ocean-200);
+  transition: background 0.1s ease;
+}
+
+.pin-dot.filled {
+  background: var(--text-on-primary);
+  border-color: var(--text-on-primary);
+}
+
+.shake {
+  animation: shake 0.45s ease;
+}
+
+@keyframes shake {
+  20%,
+  60% {
+    transform: translateX(-10px);
+  }
+  40%,
+  80% {
+    transform: translateX(10px);
+  }
+}
+
+.lock-error {
+  min-height: 24px;
+  margin-top: 12px;
+  color: var(--ocean-100);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.keypad {
+  display: grid;
+  grid-template-columns: repeat(3, 72px);
+  gap: 14px 22px;
+  margin-top: 12px;
+}
+
+.keypad-key {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  border: none;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--text-on-primary) 12%, transparent);
+  color: var(--text-on-primary);
+  font-size: 1.6rem;
+  font-weight: 500;
+  transition: background 0.12s ease;
+}
+
+.keypad-key:active:not(:disabled) {
+  background: color-mix(in srgb, var(--text-on-primary) 28%, transparent);
+}
+
+.keypad-del {
+  background: transparent;
+}
+
+.keypad-key:disabled {
+  opacity: 0.4;
+}
+
+.lock-links {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 22px;
+}
+
+.lock-screen .link-btn {
+  color: var(--ocean-100);
+}
+
+.lock-forgot {
+  display: grid;
+  gap: 14px;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.lock-forgot .input {
+  color: var(--text-primary);
+}
+
 /* =====================================================================
    Tablet
    ===================================================================== */
@@ -1105,7 +1561,7 @@
     inset: auto 0 0 0;
     z-index: 50;
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     height: calc(var(--bottom-nav-height) + var(--safe-bottom));
     padding-bottom: var(--safe-bottom);
     background: color-mix(in srgb, var(--surface) 94%, transparent);
@@ -1281,6 +1737,42 @@
 
   .settings-card > .btn {
     width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .calendar {
+    padding: 12px 8px;
+  }
+
+  .calendar-grid {
+    gap: 3px;
+  }
+
+  .calendar-day {
+    min-height: 54px;
+    padding: 5px 0 4px;
+  }
+
+  .calendar-mark {
+    font-size: 1.05rem;
+  }
+
+  .calendar-count {
+    top: 2px;
+    right: 2px;
+    min-width: 16px;
+    line-height: 16px;
+    padding: 0 4px;
+  }
+
+  .photo-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .bottom-nav-link {
+    font-size: 0.68rem;
   }
 }
 

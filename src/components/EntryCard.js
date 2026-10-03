@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
-import { Trash2 } from 'lucide-react';
+import { Image as ImageIcon, Trash2 } from 'lucide-react';
 import { entryDisplayTitle } from '../lib/api';
 import { moodLabel } from '../lib/constants';
 
@@ -21,8 +21,13 @@ export default function EntryCard({ entry, onDelete, showJournal = false, previe
           </div>
         </div>
         <p className="entry-preview">{preview ?? (entry.content?.trim() || 'No content yet…')}</p>
-        {(entry.tags?.length > 0 || (showJournal && journal)) && (
+        {(entry.tags?.length > 0 || entry.photos?.length > 0 || (showJournal && journal)) && (
           <div className="entry-meta">
+            {entry.photos?.length > 0 && (
+              <span className="tag tag-photos">
+                <ImageIcon size={13} /> {entry.photos.length}
+              </span>
+            )}
             {showJournal && journal && (
               <span className="journal-pill" style={{ '--cover': journal.cover_color }}>
                 {journal.cover_emoji} {journal.title}
