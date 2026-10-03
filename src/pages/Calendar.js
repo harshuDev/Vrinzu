@@ -50,7 +50,7 @@ export default function Calendar() {
     setLoading(true);
     supabase
       .from('entries')
-      .select('*, journals(title, cover_emoji, cover_color)')
+      .select('*, journals(*)')
       .gte('created_at', days[0].toISOString())
       .lt('created_at', addDays(days[days.length - 1], 1).toISOString())
       .order('created_at', { ascending: true })

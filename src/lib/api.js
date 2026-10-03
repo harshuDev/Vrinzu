@@ -48,3 +48,18 @@ export function isEntryEmpty(entry) {
     !(entry.photos && entry.photos.length)
   );
 }
+
+let schemaSupport;
+/**
+ * Detects which optional columns exist, so features light up only after their
+ * migration has been run: { journalStyle, richText }. Cached per page load.
+ */
+export function getSchemaSupport() {
+  if (!schemaSupport) {
+    schemaSupport = Promise.all([
+      supabase.from('journals').select('font, paper, is_locked').limit(1),
+      supabase.from('entries').select('content_html').limit(1),
+    ]).then(([journals, entries]) => ({ journalStyle: !journals.error, richText: !entries.error }));
+  }
+  return schemaSupport;
+}

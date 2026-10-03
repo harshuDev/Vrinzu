@@ -46,7 +46,9 @@ export default function App() {
           <Route path="/app" element={<AppLayout />}>
             <Route index element={<Home />} />
             <Route path="journals" element={<Journals />} />
-            <Route path="journals/:journalId" element={<JournalDetail />} />
+            <Route path="journals/:journalId" element={<JournalDetail />}>
+              <Route path="entries/:entryId" element={null} />
+            </Route>
             <Route path="entries/:entryId" element={<EntryEditor />} />
             <Route path="calendar" element={<Calendar />} />
             <Route path="search" element={<Search />} />

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
-import { BookOpen, Pencil, Plus, Trash2 } from 'lucide-react';
+import { BookOpen, Lock, Pencil, Plus, Trash2 } from 'lucide-react';
 import JournalCover from '../components/JournalCover';
 import JournalModal from '../components/JournalModal';
 import ConfirmDialog from '../components/ConfirmDialog';
@@ -78,6 +78,11 @@ export default function Journals() {
               <article key={j.id} className="journal-card">
                 <Link to={`/app/journals/${j.id}`} className="journal-card-link">
                   <JournalCover color={j.cover_color} emoji={j.cover_emoji} />
+                  {j.is_locked && (
+                    <span className="journal-lock-badge" aria-label="Locked">
+                      <Lock size={14} />
+                    </span>
+                  )}
                   <div className="journal-card-body">
                     <h3>{j.title}</h3>
                     {j.description && <p className="journal-desc">{j.description}</p>}

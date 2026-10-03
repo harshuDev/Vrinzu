@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import toast from 'react-hot-toast';
 import { startOfWeek } from 'date-fns';
-import { ArrowRight, Feather, PenLine } from 'lucide-react';
+import { ArrowRight, Feather, Lock, PenLine } from 'lucide-react';
 import EntryCard from '../components/EntryCard';
 import JournalCover from '../components/JournalCover';
 import Spinner from '../components/Spinner';
@@ -35,7 +35,7 @@ export default function Home() {
       const [recentRes, journalsRes, totalRes, weekRes] = await Promise.all([
         supabase
           .from('entries')
-          .select('*, journals(title, cover_emoji, cover_color)')
+          .select('*, journals(*)')
           .order('created_at', { ascending: false })
           .limit(6),
         supabase.from('journals').select('*').order('updated_at', { ascending: false }).limit(4),
@@ -120,6 +120,7 @@ export default function Home() {
                   <Link key={j.id} to={`/app/journals/${j.id}`} className="mini-journal">
                     <JournalCover color={j.cover_color} emoji={j.cover_emoji} size="xs" />
                     <span>{j.title}</span>
+                    {j.is_locked && <Lock size={14} className="mini-journal-lock" aria-label="Locked" />}
                   </Link>
                 ))}
               </div>

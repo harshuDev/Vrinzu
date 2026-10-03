@@ -38,6 +38,13 @@
   --accent-text: var(--ocean-700);
   --accent-text-strong: var(--ocean-800);
 
+  /* Writing paper */
+  --paper-warm: #fbf6ea;
+  --paper-warm-edge: #efe4cc;
+  --paper-rule: color-mix(in srgb, var(--ocean-500) 22%, transparent);
+  --paper-margin: color-mix(in srgb, #f43f5e 35%, transparent);
+  --paper-dot: color-mix(in srgb, var(--text-primary) 18%, transparent);
+
   /* Constant inks (same in both themes) */
   --ink: #0f172a;
   --shadow-ink: #0f172a;
@@ -98,6 +105,11 @@
   --danger-border: #7f1d1d;
   --success: #34d399;
   --shadow-ink: #000000;
+  --paper-warm: #221d15;
+  --paper-warm-edge: #3a3122;
+  --paper-rule: color-mix(in srgb, var(--ocean-400) 20%, transparent);
+  --paper-margin: color-mix(in srgb, #fb7185 30%, transparent);
+  --paper-dot: color-mix(in srgb, var(--text-primary) 16%, transparent);
   color-scheme: dark;
   }
 }
@@ -121,6 +133,11 @@
   --danger-border: #7f1d1d;
   --success: #34d399;
   --shadow-ink: #000000;
+  --paper-warm: #221d15;
+  --paper-warm-edge: #3a3122;
+  --paper-rule: color-mix(in srgb, var(--ocean-400) 20%, transparent);
+  --paper-margin: color-mix(in srgb, #fb7185 30%, transparent);
+  --paper-dot: color-mix(in srgb, var(--text-primary) 16%, transparent);
   color-scheme: dark;
 }
 

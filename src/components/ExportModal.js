@@ -4,18 +4,20 @@ import { FileDown, FileText } from 'lucide-react';
 import Modal from './Modal';
 import { supabase } from '../lib/supabase';
 import { exportAsPdf, exportAsText, exportTitle, fetchEntriesForExport } from '../lib/export';
+import { useJournalLock } from '../context/JournalLockContext';
 
 /** Export a single journal (when `journal` is given) or let the user pick one / all. */
 export default function ExportModal({ journal, onClose }) {
   const [journals, setJournals] = useState([]);
   const [selected, setSelected] = useState(journal?.id ?? 'all');
   const [busy, setBusy] = useState(null);
+  const { isLocked, requestUnlock } = useJournalLock();
 
   useEffect(() => {
     if (journal) return;
     supabase
       .from('journals')
-      .select('id, title, cover_emoji')
+      .select('*')
       .order('title')
       .then(({ data }) => setJournals(data ?? []));
   }, [journal]);
@@ -24,6 +26,13 @@ export default function ExportModal({ journal, onClose }) {
     setBusy(kind);
     try {
       const target = journal ?? journals.find((j) => j.id === selected) ?? null;
+      // Locked journals need the passcode before their entries leave the app.
+      for (const j of target ? [target] : journals) {
+        if (isLocked(j) && !(await requestUnlock(j))) {
+          setBusy(null);
+          return;
+        }
+      }
       const entries = await fetchEntriesForExport(target?.id);
       if (!entries.length) {
         toast('There are no entries to export yet', { icon: '📭' });
