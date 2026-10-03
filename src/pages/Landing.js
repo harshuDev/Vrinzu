@@ -20,7 +20,7 @@ const FEATURES = [
   {
     icon: InfinityIcon,
     title: 'Unlimited Entries',
-    text: 'Write as much as you like, every day. No caps, no paywalls on your own thoughts.',
+    text: 'Write as much as you like twin, every day. No caps, no paywalls on your own thoughts.',
   },
   {
     icon: Lock,
@@ -44,7 +44,7 @@ const FEATURES = [
   },
   {
     icon: Smartphone,
-    title: 'Mobile First',
+    title: 'Twin First',
     text: 'Install Vrinzu on your phone’s home screen and write wherever the tide takes you.',
   },
 ];
