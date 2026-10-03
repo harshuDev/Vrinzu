@@ -119,10 +119,7 @@ export default function Landing() {
               <div className="preview-body">
                 <span className="preview-mood">😌</span>
                 <h3>A quiet morning by the sea</h3>
-                <p>
-                  The tide was out and the sand was still cool. I sat with my coffee and finally wrote down the idea I
-                  have been carrying around all week…
-                </p>
+                <p>I am a part of all that I have met.</p>
                 <div className="preview-tags">
                   <span className="tag">#gratitude</span>
                   <span className="tag">#mornings</span>
