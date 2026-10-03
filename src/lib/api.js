@@ -1,8 +1,8 @@
 import { supabase } from './supabase';
 
 /** Creates an empty entry in a journal (optionally back-dated) and returns it. */
-export async function createEntry(userId, journalId, createdAt) {
-  const row = { user_id: userId, journal_id: journalId, title: '', content: '', tags: [] };
+export async function createEntry(userId, journalId, createdAt, { mood = null, title = '' } = {}) {
+  const row = { user_id: userId, journal_id: journalId, title, content: '', tags: [], mood };
   if (createdAt) row.created_at = createdAt.toISOString();
   const { data, error } = await supabase
     .from('entries')
