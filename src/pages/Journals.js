@@ -65,7 +65,7 @@ export default function Journals() {
             <BookOpen size={28} />
           </span>
           <h3>No journals yet</h3>
-          <p>Create your first journal — a home for your daily thoughts, dreams or travels.</p>
+          <p>Create your first journal. It can hold your daily thoughts, dreams or travels.</p>
           <button type="button" className="btn btn-primary" onClick={() => setEditing({})}>
             <Plus size={18} /> Create a journal
           </button>

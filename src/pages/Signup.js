@@ -39,7 +39,7 @@ export default function Signup() {
   return (
     <AuthLayout
       title="Start your journal"
-      subtitle="Create a free account — it takes less than a minute."
+      subtitle="Create a free account. It takes less than a minute."
       footer={
         <>
           Already have an account? <Link to="/login">Sign in</Link>

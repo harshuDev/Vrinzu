@@ -35,7 +35,7 @@ const FEATURES = [
   {
     icon: BookOpen,
     title: 'Custom Journals',
-    text: 'Separate journals for dreams, gratitude, travel or work — each with its own cover.',
+    text: 'Separate journals for dreams, gratitude, travel or work, each with its own cover.',
   },
   {
     icon: Search,
@@ -55,7 +55,7 @@ export default function Landing() {
   return (
     <div className="landing">
       <Helmet>
-        <title>Vrinzu — Your private online journal</title>
+        <title>Vrinzu | Your private online journal</title>
       </Helmet>
 
       <header className="landing-nav">
@@ -97,7 +97,7 @@ export default function Landing() {
           </h1>
           <p className="hero-subtitle">
             Vrinzu is a beautiful, private online journal. Capture your days, track your moods and keep every memory
-            safely harboured — on any device.
+            safe on any device.
           </p>
           <div className="hero-ctas">
             <Link to="/signup" className="btn btn-primary btn-lg">
@@ -163,7 +163,7 @@ export default function Landing() {
             <h2 className="section-title">Your journal is yours alone.</h2>
             <p>
               We believe a diary should be the most private place you own. Every entry is tied to your account and
-              protected by database-level security rules — nobody else can open it.
+              protected by database-level security rules, so nobody else can open it.
             </p>
             <ul className="privacy-list">
               <li>

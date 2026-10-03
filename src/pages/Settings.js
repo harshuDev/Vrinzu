@@ -181,14 +181,14 @@ export default function Settings() {
         <p className="settings-help">
           {hasPin
             ? 'On. Vrinzu asks for your passcode when it opens and after a minute in the background.'
-            : 'Ask for a 4–6 digit passcode whenever Vrinzu opens — handy on a shared device.'}
+            : 'Ask for a 4 to 6 digit passcode whenever Vrinzu opens. Handy on a shared device.'}
         </p>
         {pinMode ? (
           <form className="pin-form" onSubmit={handlePin}>
             {hasPin && pinInput(currentPin, setCurrentPin, 'Current passcode', true)}
             {pinMode === 'set' && (
               <>
-                {pinInput(newPin, setNewPin, hasPin ? 'New passcode' : 'Passcode (4–6 digits)', !hasPin)}
+                {pinInput(newPin, setNewPin, hasPin ? 'New passcode' : 'Passcode (4 to 6 digits)', !hasPin)}
                 {pinInput(confirmPin, setConfirmPin, 'Confirm passcode')}
               </>
             )}
