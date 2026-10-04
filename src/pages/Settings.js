@@ -6,6 +6,7 @@ import { Download, KeyRound, Lock, LogOut, Monitor, Moon, Palette, Sun, User } f
 import PasswordInput from '../components/PasswordInput';
 import { Avatar } from '../components/AppLayout';
 import ExportModal from '../components/ExportModal';
+import WritingSettings from '../components/WritingSettings';
 import { hashPin, isValidPin } from '../lib/pin';
 import { applyTheme } from '../lib/theme';
 import { useAuth } from '../context/AuthContext';
@@ -173,6 +174,8 @@ export default function Settings() {
         </div>
         <p className="settings-help">“System” follows your device’s light or dark setting. Saved to your account.</p>
       </section>
+
+      <WritingSettings />
 
       <section className="settings-card">
         <h2 className="settings-heading">

@@ -18,8 +18,8 @@ import {
   startOfWeek,
 } from 'date-fns';
 import { ChevronLeft, ChevronRight, Feather, PenLine } from 'lucide-react';
-import EntryCard from '../components/EntryCard';
-import Spinner from '../components/Spinner';
+import EntryList from '../components/EntryList';
+import { ListSkeleton } from '../components/Skeleton';
 import { supabase } from '../lib/supabase';
 import { useStartEntry } from '../context/StartEntryContext';
 
@@ -182,7 +182,7 @@ export default function Calendar() {
           )}
         </div>
         {loading ? (
-          <Spinner />
+          <ListSkeleton rows={2} />
         ) : selectedEntries.length === 0 ? (
           <div className="empty-state empty-state-soft">
             <span className="empty-icon">
@@ -194,11 +194,7 @@ export default function Calendar() {
             </p>
           </div>
         ) : (
-          <div className="entry-list">
-            {selectedEntries.map((entry) => (
-              <EntryCard key={entry.id} entry={entry} showJournal />
-            ))}
-          </div>
+          <EntryList entries={selectedEntries} grouped={false} showJournal />
         )}
       </section>
     </div>

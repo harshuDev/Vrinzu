@@ -47,6 +47,15 @@ export const moodLabel = (emoji) => MOODS.find((m) => m.emoji === emoji)?.label 
 
 export const AUTOSAVE_DELAY = 1500;
 
+export const COVER_PATTERNS = [
+  { value: 'plain', label: 'Plain' },
+  { value: 'waves', label: 'Waves' },
+  { value: 'dots', label: 'Dots' },
+  { value: 'stripes', label: 'Stripes' },
+  { value: 'grid', label: 'Grid' },
+  { value: 'sunrise', label: 'Sunrise' },
+];
+
 // Writing fonts a journal can use (CSS classes live in app.css as .font-<value>).
 export const JOURNAL_FONTS = [
   { value: 'sans', label: 'Modern', sample: 'Aa' },

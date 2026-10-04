@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import toast from 'react-hot-toast';
 import { Search as SearchIcon, X } from 'lucide-react';
-import EntryCard from '../components/EntryCard';
-import Spinner from '../components/Spinner';
+import EntryList from '../components/EntryList';
+import { ListSkeleton } from '../components/Skeleton';
 import { supabase } from '../lib/supabase';
 import { useJournalLock } from '../context/JournalLockContext';
 
@@ -108,7 +108,7 @@ export default function Search() {
       </div>
 
       {loading ? (
-        <Spinner />
+        <ListSkeleton rows={4} />
       ) : searched ? (
         <>
           <p className="search-count">
@@ -124,16 +124,11 @@ export default function Search() {
               <p>Try a different word or a shorter phrase.</p>
             </div>
           ) : (
-            <div className="entry-list">
-              {visible.map((entry) => (
-                <EntryCard
-                  key={entry.id}
-                  entry={entry}
-                  showJournal
-                  preview={<Highlight text={snippet(entry.content, searched)} query={searched} />}
-                />
-              ))}
-            </div>
+            <EntryList
+              entries={visible}
+              showJournal
+              preview={(entry) => <Highlight text={snippet(entry.content, searched)} query={searched} />}
+            />
           )}
         </>
       ) : (

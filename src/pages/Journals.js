@@ -7,7 +7,7 @@ import { BookOpen, Lock, Pencil, Plus, Trash2 } from 'lucide-react';
 import JournalCover from '../components/JournalCover';
 import JournalModal from '../components/JournalModal';
 import ConfirmDialog from '../components/ConfirmDialog';
-import Spinner from '../components/Spinner';
+import { CardsSkeleton } from '../components/Skeleton';
 import { supabase } from '../lib/supabase';
 import { removeJournalPhotos } from '../lib/photos';
 
@@ -58,7 +58,7 @@ export default function Journals() {
       </div>
 
       {loading ? (
-        <Spinner />
+        <CardsSkeleton count={4} />
       ) : journals.length === 0 ? (
         <div className="empty-state">
           <span className="empty-icon">
@@ -77,7 +77,7 @@ export default function Journals() {
             return (
               <article key={j.id} className="journal-card">
                 <Link to={`/app/journals/${j.id}`} className="journal-card-link">
-                  <JournalCover color={j.cover_color} emoji={j.cover_emoji} />
+                  <JournalCover color={j.cover_color} emoji={j.cover_emoji} pattern={j.cover_pattern} />
                   {j.is_locked && (
                     <span className="journal-lock-badge" aria-label="Locked">
                       <Lock size={14} />
