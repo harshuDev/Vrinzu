@@ -2760,6 +2760,11 @@ body.is-typing .app-main {
     padding: 24px var(--gutter) 48px;
   }
 
+  .editor-meta a.journal-pill {
+    min-height: 36px;
+    padding: 6px 12px;
+  }
+
   .editor-content {
     font-size: 1.0625rem;
     min-height: 50vh;

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import toast from 'react-hot-toast';
@@ -12,20 +12,39 @@ import { computeStreaks, dayKey, wordCount } from '../lib/stats';
 const MONTH_INITIALS = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
 const nf = new Intl.NumberFormat();
 
-/** Shared hover label for chart marks (pixels and bars). */
+/**
+ * Shared label for chart marks (pixels and bars): shown on hover and focus,
+ * and on tap when `tap` is set, since phones have no hover.
+ */
 function useTooltip() {
   const [tip, setTip] = useState(null);
-  const bind = (text) => ({
-    onMouseEnter: (e) => {
-      const r = e.currentTarget.getBoundingClientRect();
-      setTip({ text, x: r.left + r.width / 2, y: r.top });
-    },
+  const hideTimer = useRef(null);
+
+  useEffect(() => {
+    if (!tip) return undefined;
+    const hide = () => setTip(null);
+    window.addEventListener('scroll', hide, { passive: true, capture: true });
+    return () => window.removeEventListener('scroll', hide, { capture: true });
+  }, [tip]);
+
+  useEffect(() => () => clearTimeout(hideTimer.current), []);
+
+  const show = (e, text) => {
+    clearTimeout(hideTimer.current);
+    const r = e.currentTarget.getBoundingClientRect();
+    setTip({ text, x: r.left + r.width / 2, y: r.top });
+  };
+  const bind = (text, { tap = false } = {}) => ({
+    onMouseEnter: (e) => show(e, text),
     onMouseLeave: () => setTip(null),
-    onFocus: (e) => {
-      const r = e.currentTarget.getBoundingClientRect();
-      setTip({ text, x: r.left + r.width / 2, y: r.top });
-    },
+    onFocus: (e) => show(e, text),
     onBlur: () => setTip(null),
+    ...(tap && {
+      onClick: (e) => {
+        show(e, text);
+        hideTimer.current = setTimeout(() => setTip(null), 2500);
+      },
+    }),
   });
   const node = tip && (
     <div className="chart-tooltip" style={{ left: tip.x, top: tip.y }} role="status">
@@ -246,7 +265,7 @@ export default function Insights() {
                     key={m.emoji}
                     className="mood-bar-row"
                     tabIndex={0}
-                    {...bind(`${m.label}: ${moodCounts[m.emoji]}`)}
+                    {...bind(`${m.label}: ${moodCounts[m.emoji]}`, { tap: true })}
                   >
                     <span className="mood-bar-label">
                       {m.emoji} {m.label}
@@ -279,7 +298,7 @@ export default function Insights() {
                     key={i}
                     className="month-bar-col"
                     tabIndex={0}
-                    {...bind(`${format(new Date(year, i, 1), 'MMMM')}: ${n}`)}
+                    {...bind(`${format(new Date(year, i, 1), 'MMMM')}: ${n}`, { tap: true })}
                   >
                     <span className="month-bar-slot">
                       {n === maxMonth && n > 0 && <span className="month-bar-value">{n}</span>}
