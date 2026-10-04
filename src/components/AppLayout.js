@@ -9,6 +9,7 @@ import { StartEntryProvider, useStartEntry } from '../context/StartEntryContext'
 import { RELOCK_AFTER_MS } from '../lib/pin';
 import { useAuth } from '../context/AuthContext';
 import useOnline from '../lib/useOnline';
+import { cleanupStaleBlankEntries } from '../lib/api';
 
 const NAV_ITEMS = [
   { to: '/app', label: 'Home', icon: House, end: true },
@@ -69,6 +70,11 @@ export default function AppLayout() {
   const [locked, setLocked] = useState(hasPin);
   const hiddenAt = useRef(null);
   const online = useOnline();
+
+  // Tidy up blank entries left behind when the app was closed mid-entry.
+  useEffect(() => {
+    cleanupStaleBlankEntries();
+  }, []);
 
   // Lock again after the app has been in the background for a while.
   useEffect(() => {

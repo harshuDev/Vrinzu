@@ -1027,6 +1027,16 @@ body.focus-mode .editor-toolbar .save-status {
     gap: 6px;
   }
 
+  /* Just the arrow on phones, so the entry title gets the room. */
+  .today-entry-go-label {
+    display: none;
+  }
+
+  .today-entry {
+    gap: 12px;
+    padding: 12px 14px;
+  }
+
   .quick-mood {
     font-size: 1.5rem;
     border-radius: var(--radius-md);

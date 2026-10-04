@@ -49,6 +49,36 @@ export function isEntryEmpty(entry) {
   );
 }
 
+// A blank entry this old was left behind (e.g. the app was closed while it was open).
+const STALE_BLANK_MS = 60 * 60 * 1000;
+let blankCleanup;
+
+/**
+ * Deletes the user's blank entries (no title, text, mood, tags or photos) that
+ * haven't been touched for an hour. The editor normally discards a blank entry
+ * when you leave it, but that can't happen if the app is closed mid-way.
+ * Runs once per app load; callers can await it before listing entries.
+ */
+export function cleanupStaleBlankEntries() {
+  if (!blankCleanup) {
+    const cutoff = new Date(Date.now() - STALE_BLANK_MS).toISOString();
+    blankCleanup = supabase
+      .from('entries')
+      .select('*')
+      .eq('title', '')
+      .eq('content', '')
+      .is('mood', null)
+      .lt('updated_at', cutoff)
+      .limit(50)
+      .then(({ data, error }) => {
+        const ids = error ? [] : (data ?? []).filter(isEntryEmpty).map((e) => e.id);
+        return ids.length ? supabase.from('entries').delete().in('id', ids) : null;
+      })
+      .catch(() => null);
+  }
+  return blankCleanup;
+}
+
 let schemaSupport;
 /**
  * Detects which optional columns exist, so features light up only after their

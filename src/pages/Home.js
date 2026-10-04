@@ -20,7 +20,7 @@ import JournalCover from '../components/JournalCover';
 import { Bone, ListSkeleton } from '../components/Skeleton';
 import { supabase } from '../lib/supabase';
 import { PROMPTS } from '../lib/constants';
-import { entryDisplayTitle } from '../lib/api';
+import { cleanupStaleBlankEntries, entryDisplayTitle } from '../lib/api';
 import { computeStreaks, dayKey } from '../lib/stats';
 import { deleteEntryWithUndo, restoreInto } from '../lib/undoDelete';
 import { markWroteToday } from '../lib/reminders';
@@ -107,6 +107,7 @@ export default function Home() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      await cleanupStaleBlankEntries();
       const now = new Date();
       const memoryFilter = memoryRanges(now)
         .map(([a, b]) => `and(created_at.gte.${a.toISOString()},created_at.lt.${b.toISOString()})`)
@@ -212,8 +213,8 @@ export default function Home() {
                     <strong>{entryDisplayTitle(todays[0])}</strong>
                     <span>{todays[0].content?.trim() || 'Pick up where you left off…'}</span>
                   </span>
-                  <span className="today-entry-go">
-                    Continue <ArrowRight size={16} />
+                  <span className="today-entry-go" aria-hidden="true">
+                    <span className="today-entry-go-label">Continue</span> <ArrowRight size={18} />
                   </span>
                 </Link>
               </>
