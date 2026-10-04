@@ -231,8 +231,10 @@ export default function EntryEditor({
   }, [showTags]);
 
   // ---- Tags ---------------------------------------------------------------
+  const normalizeTag = (raw) => raw.trim().replace(/^#+/, '').replace(/\s+/g, '-').toLowerCase().slice(0, 30);
+
   const addTag = () => {
-    const tag = tagInput.trim().replace(/^#+/, '').replace(/\s+/g, '-').toLowerCase().slice(0, 30);
+    const tag = normalizeTag(tagInput);
     setTagInput('');
     if (!tag) return;
     if (tags.includes(tag)) {
@@ -240,6 +242,21 @@ export default function EntryEditor({
       return;
     }
     setTags([...tags, tag]);
+  };
+
+  // Android keyboards don't report "," on keydown, so commas (typed or pasted)
+  // are also caught here: everything before the last comma becomes tags.
+  const handleTagChange = (e) => {
+    const value = e.target.value;
+    if (!value.includes(',')) {
+      setTagInput(value);
+      return;
+    }
+    const parts = value.split(',');
+    const rest = parts.pop();
+    const fresh = parts.map(normalizeTag).filter((t, i, all) => t && !tags.includes(t) && all.indexOf(t) === i);
+    if (fresh.length) setTags([...tags, ...fresh]);
+    setTagInput(rest);
   };
 
   const handleTagKeyDown = (e) => {
@@ -464,7 +481,7 @@ export default function EntryEditor({
             ref={tagInputRef}
             className="tag-input"
             value={tagInput}
-            onChange={(e) => setTagInput(e.target.value)}
+            onChange={handleTagChange}
             onKeyDown={handleTagKeyDown}
             onBlur={() => tagInput.trim() && addTag()}
             placeholder={tags.length ? 'Add another…' : 'Type a tag and press Enter'}
