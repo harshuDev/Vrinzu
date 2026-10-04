@@ -4,7 +4,9 @@ import { Helmet } from 'react-helmet-async';
 import toast from 'react-hot-toast';
 import AuthLayout from '../components/AuthLayout';
 import PasswordInput from '../components/PasswordInput';
+import ResendConfirmation from '../components/ResendConfirmation';
 import { useAuth } from '../context/AuthContext';
+import { friendlyAuthError, isEmailNotConfirmed } from '../lib/authErrors';
 
 export default function Login() {
   const { signIn } = useAuth();
@@ -13,6 +15,8 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  // 'unconfirmed' after signing in too early; 'expired' after opening an old email link.
+  const [notice, setNotice] = useState(location.state?.linkError ? 'expired' : null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -26,7 +30,8 @@ export default function Login() {
       toast.success('Welcome back!');
       navigate(location.state?.from?.pathname || '/app', { replace: true });
     } catch (err) {
-      toast.error(err.message === 'Invalid login credentials' ? 'Incorrect email or password' : err.message);
+      if (isEmailNotConfirmed(err)) setNotice('unconfirmed');
+      else toast.error(friendlyAuthError(err));
       setLoading(false);
     }
   };
@@ -44,6 +49,16 @@ export default function Login() {
       <Helmet>
         <title>Sign In · Vrinzu</title>
       </Helmet>
+      {notice === 'unconfirmed' && (
+        <ResendConfirmation email={email} title="Confirm your email first">
+          <p>We sent a link to {email.trim() || 'your inbox'}. Tap it, then sign in. No email? Send a new one.</p>
+        </ResendConfirmation>
+      )}
+      {notice === 'expired' && (
+        <ResendConfirmation email={email} onEmailChange={setEmail} title="That link has expired">
+          <p>Email links work once and only the newest one counts. Enter your email to get a fresh link.</p>
+        </ResendConfirmation>
+      )}
       <form className="auth-form" onSubmit={handleSubmit} noValidate>
         <label className="field">
           <span className="field-label">Email</span>
