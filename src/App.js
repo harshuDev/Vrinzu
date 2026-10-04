@@ -1,11 +1,12 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { isSupabaseConfigured } from './lib/supabase';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { ProtectedRoute, PublicOnlyRoute } from './components/RouteGuards';
 import AppLayout from './components/AppLayout';
 import SetupNotice from './components/SetupNotice';
 import Landing from './pages/Landing';
+import Welcome from './pages/Welcome';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Home from './pages/Home';
@@ -32,6 +33,13 @@ const toastOptions = {
   },
 };
 
+// Phones open on the welcome slides when signed out, and on the app when signed in.
+function PhoneStart() {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  return user ? <Navigate to="/app" replace /> : <Welcome />;
+}
+
 // Phones: toasts sit at the bottom, above the tab bar, where Undo is in thumb reach.
 const phoneToastOffset = { bottom: 'calc(var(--bottom-nav-height) + 16px + var(--safe-bottom))' };
 
@@ -47,8 +55,9 @@ export default function App() {
         toastOptions={toastOptions}
       />
       <Routes>
-        <Route path="/" element={<Landing />} />
+        <Route path="/" element={isPhone ? <PhoneStart /> : <Landing />} />
         <Route element={<PublicOnlyRoute />}>
+          <Route path="/welcome" element={<Welcome />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
         </Route>
