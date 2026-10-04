@@ -1,12 +1,10 @@
-import { Waves } from 'lucide-react';
+import { LOGO_SRC } from './Logo';
 
 export default function SetupNotice() {
   return (
     <div className="setup-notice">
       <div className="setup-card">
-        <span className="logo-mark logo-mark-lg">
-          <Waves strokeWidth={2.5} />
-        </span>
+        <img className="logo-mark logo-mark-lg" src={LOGO_SRC} alt="Vrinzu" />
         <h1>Connect Vrinzu to Supabase</h1>
         <p>
           The environment variables <code>REACT_APP_SUPABASE_URL</code> and <code>REACT_APP_SUPABASE_ANON_KEY</code> are

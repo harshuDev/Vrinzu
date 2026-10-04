@@ -179,20 +179,23 @@
   text-shadow: 0 6px 24px rgba(8, 47, 73, 0.35);
 }
 
-.welcome-mark {
-  display: grid;
-  place-items: center;
-  width: 0.95em;
-  height: 0.95em;
-  border-radius: 0.24em;
-  background: rgba(255, 255, 255, 0.18);
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  box-shadow: 0 10px 30px rgba(8, 47, 73, 0.35);
+.welcome-wordmark {
+  flex-direction: column;
+  gap: 4px;
 }
 
-.welcome-mark svg {
-  width: 62%;
-  height: 62%;
+.welcome-mark {
+  display: block;
+  width: min(46vw, 190px);
+  height: auto;
+  filter: drop-shadow(0 12px 24px rgba(8, 47, 73, 0.4));
+  animation: welcome-bob 4s ease-in-out infinite;
+}
+
+@keyframes welcome-bob {
+  50% {
+    transform: translateY(-6px) rotate(-2deg);
+  }
 }
 
 .welcome-slide-welcome .welcome-title {

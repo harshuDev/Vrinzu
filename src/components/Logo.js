@@ -1,12 +1,11 @@
 import { Link } from 'react-router-dom';
-import { Waves } from 'lucide-react';
+
+export const LOGO_SRC = `${process.env.PUBLIC_URL}/logo.png`;
 
 export default function Logo({ to = '/', size = 'md', light = false }) {
   return (
     <Link to={to} className={`logo logo-${size}${light ? ' logo-light' : ''}`} aria-label="Vrinzu home">
-      <span className="logo-mark">
-        <Waves strokeWidth={2.5} />
-      </span>
+      <img className="logo-mark" src={LOGO_SRC} alt="" />
       <span className="logo-text">Vrinzu</span>
     </Link>
   );

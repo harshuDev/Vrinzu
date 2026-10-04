@@ -1,6 +1,6 @@
 /* Vrinzu service worker — makes the app installable, lets it open offline and
    shows the daily writing reminder. API calls always go to the network. */
-const SHELL_CACHE = 'vrinzu-shell-v2';
+const SHELL_CACHE = 'vrinzu-shell-v3';
 const ASSET_CACHE = 'vrinzu-assets-v1';
 const STATE_CACHE = 'vrinzu-state';
 const KEEP = [SHELL_CACHE, ASSET_CACHE, STATE_CACHE];
