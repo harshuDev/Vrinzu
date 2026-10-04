@@ -441,3 +441,60 @@
     height: min(70vw, 270px);
   }
 }
+
+/* ---------- Auth notices (confirm email, expired link) ---------- */
+.auth-notice {
+  display: flex;
+  gap: 12px;
+  margin-top: 22px;
+  padding: 14px;
+  border: 1px solid var(--tint-border);
+  border-radius: var(--radius-md);
+  background: var(--tint);
+}
+
+.auth-notice-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--accent-text);
+}
+
+.auth-notice-body {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+
+.auth-notice-title {
+  font-weight: 700;
+}
+
+.auth-notice-body p {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+
+.auth-notice-body .btn {
+  justify-self: start;
+}
+
+.auth-notice-input {
+  min-height: 42px;
+}
+
+.auth-notice + .btn-block {
+  margin-top: 16px;
+}
+
+.auth-switch {
+  display: block;
+  margin: 12px auto 0;
+  min-height: var(--touch);
+}

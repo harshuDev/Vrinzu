@@ -1,4 +1,5 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { isSupabaseConfigured } from './lib/supabase';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -19,6 +20,7 @@ import Insights from './pages/Insights';
 import Settings from './pages/Settings';
 import NotFound from './pages/NotFound';
 import useMediaQuery from './lib/useMediaQuery';
+import { initialLinkError } from './lib/linkError';
 
 const toastOptions = {
   duration: 3500,
@@ -32,6 +34,15 @@ const toastOptions = {
     boxShadow: 'var(--shadow-lg)',
   },
 };
+
+// After a failed email link, go to sign in and explain (instead of a silent redirect).
+function LinkErrorRedirect() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (initialLinkError) navigate('/login', { replace: true, state: { linkError: initialLinkError.code } });
+  }, [navigate]);
+  return null;
+}
 
 // Phones open on the welcome slides when signed out, and on the app when signed in.
 function PhoneStart() {
@@ -54,6 +65,7 @@ export default function App() {
         containerStyle={isPhone ? phoneToastOffset : undefined}
         toastOptions={toastOptions}
       />
+      <LinkErrorRedirect />
       <Routes>
         <Route path="/" element={isPhone ? <PhoneStart /> : <Landing />} />
         <Route element={<PublicOnlyRoute />}>

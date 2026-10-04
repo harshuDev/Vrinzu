@@ -44,6 +44,15 @@ export function AuthProvider({ children }) {
     return data;
   }, []);
 
+  const resendConfirmation = useCallback(async (email) => {
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email,
+      options: { emailRedirectTo: `${window.location.origin}/app` },
+    });
+    if (error) throw error;
+  }, []);
+
   const signOut = useCallback(async () => {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
@@ -66,8 +75,8 @@ export function AuthProvider({ children }) {
   }, [themePref]);
 
   const value = useMemo(
-    () => ({ session, user, displayName, loading, signIn, signUp, signOut, updateProfile }),
-    [session, user, displayName, loading, signIn, signUp, signOut, updateProfile]
+    () => ({ session, user, displayName, loading, signIn, signUp, resendConfirmation, signOut, updateProfile }),
+    [session, user, displayName, loading, signIn, signUp, resendConfirmation, signOut, updateProfile]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

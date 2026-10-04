@@ -1,3 +1,5 @@
+// Must run first: captures an auth error from an email link before anything reads the URL.
+import './lib/linkError';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
