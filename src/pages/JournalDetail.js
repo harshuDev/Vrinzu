@@ -4,17 +4,16 @@ import { Helmet } from 'react-helmet-async';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 import { ArrowLeft, Download, Feather, Lock, Pencil, Plus } from 'lucide-react';
-import EntryCard from '../components/EntryCard';
+import EntryList from '../components/EntryList';
 import EntryEditor from './EntryEditor';
 import JournalCover from '../components/JournalCover';
 import JournalModal from '../components/JournalModal';
-import ConfirmDialog from '../components/ConfirmDialog';
 import ExportModal from '../components/ExportModal';
 import LockedPanel from '../components/LockedPanel';
-import Spinner from '../components/Spinner';
+import { ListSkeleton } from '../components/Skeleton';
 import { supabase } from '../lib/supabase';
 import { entryDisplayTitle } from '../lib/api';
-import { removePhotos } from '../lib/photos';
+import { deleteEntryWithUndo, restoreInto } from '../lib/undoDelete';
 import useMediaQuery from '../lib/useMediaQuery';
 import { useStartEntry } from '../context/StartEntryContext';
 import { useJournalLock } from '../context/JournalLockContext';
@@ -32,7 +31,6 @@ export default function JournalDetail() {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [editingJournal, setEditingJournal] = useState(false);
-  const [deleting, setDeleting] = useState(null);
   const [exporting, setExporting] = useState(false);
 
   const journalPath = `/app/journals/${journalId}`;
@@ -67,19 +65,21 @@ export default function JournalDetail() {
   );
   const handleRemoved = useCallback((id) => setEntries((list) => list.filter((e) => e.id !== id)), []);
 
-  const handleDelete = async () => {
-    const { error } = await supabase.from('entries').delete().eq('id', deleting.id);
-    if (error) {
-      toast.error(error.message);
-      throw error;
-    }
-    removePhotos(deleting.photos).catch(() => {});
-    toast.success('Entry deleted');
-    handleRemoved(deleting.id);
-    if (deleting.id === entryId) navigate(journalPath, { replace: true });
+  const handleDelete = (entry) => {
+    deleteEntryWithUndo(entry, {
+      onRemove: () => handleRemoved(entry.id),
+      onRestore: () => setEntries(restoreInto(entry)),
+    });
+    if (entry.id === entryId) navigate(journalPath, { replace: true });
   };
 
-  if (loading) return <Spinner />;
+  if (loading) {
+    return (
+      <div className="page">
+        <ListSkeleton rows={6} />
+      </div>
+    );
+  }
 
   if (!journal) {
     return (
@@ -127,15 +127,6 @@ export default function JournalDetail() {
         <JournalModal journal={journal} onClose={() => setEditingJournal(false)} onSaved={(j) => setJournal(j)} />
       )}
       {exporting && <ExportModal journal={journal} onClose={() => setExporting(false)} />}
-      {deleting && (
-        <ConfirmDialog
-          title="Delete entry?"
-          message={`“${entryDisplayTitle(deleting)}” will be permanently deleted.`}
-          confirmLabel="Delete entry"
-          onConfirm={handleDelete}
-          onClose={() => setDeleting(null)}
-        />
-      )}
     </>
   );
 
@@ -155,7 +146,12 @@ export default function JournalDetail() {
               <ArrowLeft size={16} /> All journals
             </Link>
             <div className="journal-pane-title">
-              <JournalCover color={journal.cover_color} emoji={journal.cover_emoji} size="xs" />
+              <JournalCover
+                color={journal.cover_color}
+                emoji={journal.cover_emoji}
+                pattern={journal.cover_pattern}
+                size="xs"
+              />
               <div>
                 <h1>
                   {journal.title} {journal.is_locked && <Lock size={14} aria-label="Locked" />}
@@ -239,23 +235,42 @@ export default function JournalDetail() {
       </Link>
 
       <header className="journal-header" style={{ '--cover': journal.cover_color }}>
-        <JournalCover color={journal.cover_color} emoji={journal.cover_emoji} size="sm" />
+        <JournalCover
+          color={journal.cover_color}
+          emoji={journal.cover_emoji}
+          pattern={journal.cover_pattern}
+          size="sm"
+        />
         <div className="journal-header-info">
-          <h1 className="page-title">{journal.title}</h1>
+          <h1 className="page-title">
+            {journal.title} {journal.is_locked && <Lock size={16} aria-label="Locked" />}
+          </h1>
           {journal.description && <p className="page-subtitle">{journal.description}</p>}
           <p className="journal-meta">
             {entries.length} {entries.length === 1 ? 'entry' : 'entries'}
           </p>
         </div>
         <div className="journal-header-actions">
-          <button type="button" className="btn btn-ghost" onClick={() => setEditingJournal(true)}>
-            <Pencil size={16} /> Edit
-          </button>
-          <button type="button" className="btn btn-ghost" onClick={() => setExporting(true)}>
-            <Download size={16} /> Export
-          </button>
           <button type="button" className="btn btn-primary" onClick={handleNewEntry} disabled={creating}>
-            <Plus size={18} /> {creating ? 'Creating…' : 'New Entry'}
+            <Plus size={18} /> {creating ? 'Creating…' : 'New entry'}
+          </button>
+          <button
+            type="button"
+            className="icon-btn icon-btn-outlined"
+            onClick={() => setEditingJournal(true)}
+            aria-label="Edit journal"
+            title="Edit journal"
+          >
+            <Pencil size={18} />
+          </button>
+          <button
+            type="button"
+            className="icon-btn icon-btn-outlined"
+            onClick={() => setExporting(true)}
+            aria-label="Export journal"
+            title="Export journal"
+          >
+            <Download size={18} />
           </button>
         </div>
       </header>
@@ -272,11 +287,7 @@ export default function JournalDetail() {
           </button>
         </div>
       ) : (
-        <div className="entry-list">
-          {entries.map((entry) => (
-            <EntryCard key={entry.id} entry={entry} to={entryPath(entry.id)} onDelete={setDeleting} />
-          ))}
-        </div>
+        <EntryList entries={entries} to={(e) => entryPath(e.id)} onDelete={handleDelete} />
       )}
       {modals}
     </div>

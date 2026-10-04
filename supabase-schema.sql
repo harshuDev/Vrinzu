@@ -183,3 +183,14 @@ alter table public.journals add column if not exists is_locked boolean not null 
 -- Formatted entry text (bold, italic, lists, links). `content` keeps the
 -- plain-text version for previews, search and .txt export.
 alter table public.entries add column if not exists content_html text;
+
+
+-- ---------------------------------------------------------------------
+-- Journal cover patterns
+-- ---------------------------------------------------------------------
+
+alter table public.journals add column if not exists cover_pattern text not null default 'plain';
+
+alter table public.journals drop constraint if exists journals_cover_pattern_check;
+alter table public.journals add constraint journals_cover_pattern_check
+  check (cover_pattern in ('plain', 'waves', 'dots', 'stripes', 'grid', 'sunrise'));

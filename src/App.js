@@ -17,6 +17,7 @@ import Calendar from './pages/Calendar';
 import Insights from './pages/Insights';
 import Settings from './pages/Settings';
 import NotFound from './pages/NotFound';
+import useMediaQuery from './lib/useMediaQuery';
 
 const toastOptions = {
   duration: 3500,
@@ -31,12 +32,20 @@ const toastOptions = {
   },
 };
 
+// Phones: toasts sit at the bottom, above the tab bar, where Undo is in thumb reach.
+const phoneToastOffset = { bottom: 'calc(var(--bottom-nav-height) + 16px + var(--safe-bottom))' };
+
 export default function App() {
+  const isPhone = useMediaQuery('(max-width: 768px)');
   if (!isSupabaseConfigured) return <SetupNotice />;
 
   return (
     <AuthProvider>
-      <Toaster position="top-center" toastOptions={toastOptions} />
+      <Toaster
+        position={isPhone ? 'bottom-center' : 'top-center'}
+        containerStyle={isPhone ? phoneToastOffset : undefined}
+        toastOptions={toastOptions}
+      />
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route element={<PublicOnlyRoute />}>

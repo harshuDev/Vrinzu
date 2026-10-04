@@ -2,10 +2,24 @@ import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useRef, useSta
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import toast from 'react-hot-toast';
-import { format } from 'date-fns';
-import { AlertCircle, ArrowLeft, Check, ImagePlus, Loader2, Smile, Tag, Trash2, X } from 'lucide-react';
+import { format, isToday } from 'date-fns';
+import {
+  AlertCircle,
+  ArrowLeft,
+  CalendarClock,
+  Check,
+  CloudOff,
+  ImagePlus,
+  Loader2,
+  Maximize2,
+  Minimize2,
+  Smile,
+  Tag,
+  Trash2,
+  X,
+} from 'lucide-react';
 import ConfirmDialog from '../components/ConfirmDialog';
-import Spinner from '../components/Spinner';
+import { PageSkeleton } from '../components/Skeleton';
 import PhotoGallery from '../components/PhotoGallery';
 import { plainToHtml } from '../lib/richText';
 import LockedPanel from '../components/LockedPanel';
@@ -14,6 +28,10 @@ import { supabase } from '../lib/supabase';
 import { entryDisplayTitle, isEntryEmpty } from '../lib/api';
 import { AUTOSAVE_DELAY, MOODS, moodLabel } from '../lib/constants';
 import { removePhotos, uploadPhoto } from '../lib/photos';
+import { clearDraft, isNetworkError, readDraft, saveDraft } from '../lib/drafts';
+import { markWroteToday } from '../lib/reminders';
+import { haptic } from '../lib/haptics';
+import { wordCount as countWords } from '../lib/stats';
 import { useAuth } from '../context/AuthContext';
 
 // The formatting editor is a large library, so it loads only when an entry opens.
@@ -21,6 +39,18 @@ const RichEditor = lazy(() => import('../components/RichEditor'));
 
 const snapshotOf = ({ title, content, contentHtml, mood, tags, photos }) =>
   JSON.stringify({ title, content, contentHtml, mood, tags, photos });
+
+const FOCUS_KEY = 'vrinzu-focus';
+const readFocus = () => {
+  try {
+    return localStorage.getItem(FOCUS_KEY) === '1';
+  } catch {
+    return false;
+  }
+};
+
+// <input type="datetime-local"> wants local time without a zone: 2026-10-04T19:40
+const toLocalInput = (iso) => format(new Date(iso), "yyyy-MM-dd'T'HH:mm");
 
 /**
  * Writing screen. Standalone at /app/entries/:entryId, or embedded beside the
@@ -39,6 +69,7 @@ export default function EntryEditor({
   const entryId = entryIdProp ?? params.entryId;
   const navigate = useNavigate();
   const { user } = useAuth();
+  const wordGoal = Number(user?.user_metadata?.word_goal ?? 250);
   const { isLocked, requestUnlock } = useJournalLock();
 
   const [entry, setEntry] = useState(null);
@@ -56,10 +87,12 @@ export default function EntryEditor({
   const [photosSupported, setPhotosSupported] = useState(false);
   const [uploading, setUploading] = useState(0);
   const [tagInput, setTagInput] = useState('');
-  const [status, setStatus] = useState('saved'); // saved | unsaved | saving | error
+  const [status, setStatus] = useState('saved'); // saved | unsaved | saving | offline | error
+  const [focus, setFocus] = useState(readFocus);
   const [showMoods, setShowMoods] = useState(false);
   const [showTags, setShowTags] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [loadError, setLoadError] = useState(null);
 
   const latestRef = useRef({ title: '', content: '', mood: null, tags: [] });
   const savedSnapshotRef = useRef(null);
@@ -76,8 +109,11 @@ export default function EntryEditor({
   const moodRef = useRef(null);
   const tagInputRef = useRef(null);
   const fileInputRef = useRef(null);
+  const goalCelebratedRef = useRef(false);
+  const createdAtRef = useRef(null);
 
   latestRef.current = { title, content, contentHtml, mood, tags, photos };
+  createdAtRef.current = entry?.created_at ?? null;
   photosSupportedRef.current = photosSupported;
   richSupportedRef.current = richSupported;
 
@@ -93,9 +129,10 @@ export default function EntryEditor({
       .maybeSingle()
       .then(({ data, error }) => {
         if (cancelled) return;
-        if (error) toast.error(error.message);
+        if (error && !isNetworkError(error)) toast.error(error.message);
+        setLoadError(error && isNetworkError(error) ? 'offline' : null);
         if (data) {
-          const initial = {
+          const server = {
             title: data.title ?? '',
             content: data.content ?? '',
             contentHtml: data.content_html ?? null,
@@ -103,6 +140,9 @@ export default function EntryEditor({
             tags: data.tags ?? [],
             photos: data.photos ?? [],
           };
+          // Changes written offline (and not yet synced) win over the server copy.
+          const draft = readDraft(entryId, data.updated_at);
+          const initial = draft ? { ...server, ...draft } : server;
           setTitle(initial.title);
           setContent(initial.content);
           setContentHtml(initial.contentHtml);
@@ -112,10 +152,11 @@ export default function EntryEditor({
           setTags(initial.tags);
           setPhotos(initial.photos);
           setPhotosSupported(Array.isArray(data.photos));
-          savedSnapshotRef.current = snapshotOf(initial);
+          savedSnapshotRef.current = snapshotOf(server);
           latestRef.current = initial;
           loadedRef.current = true;
-          setStatus('saved');
+          goalCelebratedRef.current = countWords(initial.content) >= wordGoal;
+          setStatus(draft ? 'unsaved' : 'saved');
         }
         setEntry(data);
         setLoading(false);
@@ -123,6 +164,7 @@ export default function EntryEditor({
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entryId]);
 
   // ---- Save ---------------------------------------------------------------
@@ -140,10 +182,18 @@ export default function EntryEditor({
       const { error } = await supabase.from('entries').update(fields).eq('id', entryId);
 
       if (error) {
+        if (isNetworkError(error)) {
+          // Offline: keep the words on this device and sync when the connection is back.
+          saveDraft(entryId, values);
+          setStatus('offline');
+          return;
+        }
         setStatus('error');
         toast.error(`Couldn’t save: ${error.message}`, { id: 'autosave-error' });
         return;
       }
+      clearDraft(entryId);
+      if (values.content.trim() && createdAtRef.current && isToday(new Date(createdAtRef.current))) markWroteToday();
       savedSnapshotRef.current = snapshot;
       onSavedRef.current?.({ id: entryId, ...fields });
       setStatus(snapshotOf(latestRef.current) === snapshot ? 'saved' : 'unsaved');
@@ -182,6 +232,11 @@ export default function EntryEditor({
   useEffect(() => {
     const onBeforeUnload = (e) => {
       if (loadedRef.current && snapshotOf(latestRef.current) !== savedSnapshotRef.current) {
+        if (!navigator.onLine) {
+          // Nothing is lost: keep it on the device and let the page close quietly.
+          saveDraft(entryId, latestRef.current);
+          return;
+        }
         save();
         e.preventDefault();
         e.returnValue = '';
@@ -189,7 +244,7 @@ export default function EntryEditor({
     };
     window.addEventListener('beforeunload', onBeforeUnload);
     return () => window.removeEventListener('beforeunload', onBeforeUnload);
-  }, [save]);
+  }, [save, entryId]);
 
   // Cmd/Ctrl + S saves immediately.
   useEffect(() => {
@@ -202,6 +257,41 @@ export default function EntryEditor({
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [save]);
+
+  // Back online: send anything that was kept on the device.
+  useEffect(() => {
+    const onOnline = () => save();
+    window.addEventListener('online', onOnline);
+    return () => window.removeEventListener('online', onOnline);
+  }, [save]);
+
+  // Phones: the writing page takes the whole screen (no tab bar or app header).
+  useEffect(() => {
+    if (embedded) return undefined;
+    document.body.classList.add('editor-open');
+    return () => document.body.classList.remove('editor-open');
+  }, [embedded]);
+
+  // Focus mode hides everything but the page; remembered on this device.
+  useEffect(() => {
+    document.body.classList.toggle('focus-mode', focus);
+    try {
+      localStorage.setItem(FOCUS_KEY, focus ? '1' : '0');
+    } catch {
+      // Not remembered; still applies now.
+    }
+    return () => document.body.classList.remove('focus-mode');
+  }, [focus]);
+
+  // Celebrate once when the entry reaches the daily word goal.
+  useEffect(() => {
+    if (!loadedRef.current || !wordGoal || goalCelebratedRef.current) return;
+    if (countWords(content) >= wordGoal) {
+      goalCelebratedRef.current = true;
+      haptic([20, 60, 20]);
+      toast(`You hit your ${wordGoal}-word goal`, { icon: '🎉', id: 'word-goal' });
+    }
+  }, [content, wordGoal]);
 
   // Close the mood picker when clicking outside it.
   useEffect(() => {
@@ -290,6 +380,22 @@ export default function EntryEditor({
     removePhotos([path]).catch(() => {});
   };
 
+  // ---- Date ---------------------------------------------------------------
+  const handleDateChange = async (e) => {
+    if (!e.target.value) return;
+    const createdAt = new Date(e.target.value).toISOString();
+    const previous = entry.created_at;
+    setEntry((en) => ({ ...en, created_at: createdAt }));
+    const { error } = await supabase.from('entries').update({ created_at: createdAt }).eq('id', entryId);
+    if (error) {
+      setEntry((en) => ({ ...en, created_at: previous }));
+      toast.error(`Couldn’t change the date: ${error.message}`);
+      return;
+    }
+    onSavedRef.current?.({ id: entryId, created_at: createdAt });
+    toast.success(`Moved to ${format(new Date(createdAt), 'EEE d MMM, h:mm a')}`, { id: 'entry-date' });
+  };
+
   // ---- Delete -------------------------------------------------------------
   const handleDelete = async () => {
     deletedRef.current = true;
@@ -306,14 +412,26 @@ export default function EntryEditor({
   };
 
   // ---- Render -------------------------------------------------------------
-  if (loading) return <Spinner />;
+  if (loading) return <PageSkeleton />;
 
   if (!entry) {
     return (
       <div className="page">
         <div className="empty-state">
-          <h3>Entry not found</h3>
-          <p>It may have been deleted.</p>
+          {loadError === 'offline' ? (
+            <>
+              <span className="empty-icon">
+                <CloudOff size={26} />
+              </span>
+              <h3>You’re offline</h3>
+              <p>This entry will open once you’re connected again.</p>
+            </>
+          ) : (
+            <>
+              <h3>Entry not found</h3>
+              <p>It may have been deleted.</p>
+            </>
+          )}
           <Link to="/app" className="btn btn-primary">
             Go home
           </Link>
@@ -325,7 +443,8 @@ export default function EntryEditor({
   // The parent's copy wins so style changes made while this entry is open show up at once.
   const journal = journalOverride ?? entry.journals;
   const backTo = backToProp ?? (journal ? `/app/journals/${journal.id}` : '/app');
-  const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0;
+  const wordCount = countWords(content);
+  const goalProgress = wordGoal ? Math.min(1, wordCount / wordGoal) : 0;
   const editorClass = `editor${embedded ? ' editor-embedded' : ''}`;
 
   if (isLocked(journal)) {
@@ -371,6 +490,14 @@ export default function EntryEditor({
             </>
           )}
           {!uploading && status === 'unsaved' && <>Editing…</>}
+          {!uploading && status === 'offline' && (
+            <span
+              className="save-status-offline"
+              title="You’re offline. Your words are kept on this device and will sync."
+            >
+              <CloudOff size={14} /> Saved on device
+            </span>
+          )}
           {status === 'error' && (
             <button type="button" className="link-btn" onClick={save}>
               <AlertCircle size={14} /> Retry save
@@ -403,6 +530,7 @@ export default function EntryEditor({
                       onClick={() => {
                         setMood(mood === m.emoji ? null : m.emoji);
                         setShowMoods(false);
+                        haptic();
                       }}
                       title={m.label}
                       aria-label={m.label}
@@ -457,6 +585,18 @@ export default function EntryEditor({
 
           <button
             type="button"
+            className={`toolbar-btn focus-toggle${focus ? ' has-value' : ''}`}
+            onClick={() => setFocus((f) => !f)}
+            aria-pressed={focus}
+            aria-label={focus ? 'Exit focus mode' : 'Focus mode'}
+            title={focus ? 'Exit focus mode' : 'Focus mode: just you and the page'}
+          >
+            {focus ? <Minimize2 size={19} /> : <Maximize2 size={19} />}
+            <span className="toolbar-btn-label">{focus ? 'Exit focus' : 'Focus'}</span>
+          </button>
+
+          <button
+            type="button"
             className="icon-btn icon-btn-danger"
             onClick={() => setConfirmDelete(true)}
             aria-label="Delete entry"
@@ -492,6 +632,21 @@ export default function EntryEditor({
       )}
 
       <div className={`editor-paper font-${journal?.font || 'sans'} paper-${journal?.paper || 'plain'}`}>
+        <label className="entry-date-picker" title="Change the date and time">
+          <CalendarClock size={16} />
+          <time dateTime={entry.created_at}>
+            <strong>{format(new Date(entry.created_at), 'EEEE, d MMMM yyyy')}</strong>
+            <span>{format(new Date(entry.created_at), 'h:mm a')}</span>
+          </time>
+          <input
+            type="datetime-local"
+            value={toLocalInput(entry.created_at)}
+            onChange={handleDateChange}
+            onClick={(e) => e.currentTarget.showPicker?.()}
+            aria-label="Entry date and time"
+          />
+        </label>
+
         <div className="editor-meta">
           {journal && (
             <Link
@@ -502,7 +657,6 @@ export default function EntryEditor({
               {journal.cover_emoji} {journal.title}
             </Link>
           )}
-          <time dateTime={entry.created_at}>{format(new Date(entry.created_at), 'EEEE, MMMM d, yyyy')}</time>
         </div>
 
         <input
@@ -544,9 +698,24 @@ export default function EntryEditor({
           />
         )}
 
-        <p className="editor-footer">
-          {wordCount} {wordCount === 1 ? 'word' : 'words'}
-        </p>
+        <div className="editor-footer">
+          <span>
+            {wordCount} {wordCount === 1 ? 'word' : 'words'}
+            {wordGoal > 0 && <span className="goal-of"> / {wordGoal}</span>}
+          </span>
+          {wordGoal > 0 && (
+            <span
+              className={`goal-bar${goalProgress >= 1 ? ' is-done' : ''}`}
+              role="progressbar"
+              aria-label="Daily word goal"
+              aria-valuemin={0}
+              aria-valuemax={wordGoal}
+              aria-valuenow={Math.min(wordCount, wordGoal)}
+            >
+              <span style={{ width: `${goalProgress * 100}%` }} />
+            </span>
+          )}
+        </div>
       </div>
 
       {confirmDelete && (

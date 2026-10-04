@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { ChartColumn, BookOpen, CalendarDays, House, LogOut, Plus, Search, Settings } from 'lucide-react';
+import { ChartColumn, BookOpen, CalendarDays, CloudOff, House, LogOut, Plus, Search, Settings } from 'lucide-react';
 import Logo from './Logo';
 import LockScreen from './LockScreen';
 import { JournalLockProvider } from '../context/JournalLockContext';
 import { StartEntryProvider, useStartEntry } from '../context/StartEntryContext';
 import { RELOCK_AFTER_MS } from '../lib/pin';
 import { useAuth } from '../context/AuthContext';
+import useOnline from '../lib/useOnline';
 
 const NAV_ITEMS = [
   { to: '/app', label: 'Home', icon: House, end: true },
@@ -67,6 +68,7 @@ export default function AppLayout() {
   // Locked when the app opens (a fresh page load) if a passcode is set.
   const [locked, setLocked] = useState(hasPin);
   const hiddenAt = useRef(null);
+  const online = useOnline();
 
   // Lock again after the app has been in the background for a while.
   useEffect(() => {
@@ -136,6 +138,11 @@ export default function AppLayout() {
           </header>
 
           <main className="app-main">
+            {!online && (
+              <div className="offline-banner" role="status">
+                <CloudOff size={16} /> You’re offline. What you write is kept on this device and syncs when you’re back.
+              </div>
+            )}
             <Outlet />
           </main>
 

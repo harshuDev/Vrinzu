@@ -45,7 +45,7 @@ src/
   pages/           Landing, Login, Signup, Home, Journals, JournalDetail, EntryEditor, Search, Settings
   styles/          index.css (design tokens), landing.css, auth.css, app.css
 supabase-schema.sql  full current schema (fresh projects)
-supabase/migrations/ 001 initial schema, 002 photos, 003 styles/locks (apply in order)
+supabase/migrations/ 001 initial schema, 002 photos, 003 styles/locks, 004 cover patterns (apply in order)
 vercel.json        SPA rewrites for client-side routing
 ```
 

@@ -3,11 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import toast from 'react-hot-toast';
 import { format, getDaysInMonth, isAfter } from 'date-fns';
-import { ChevronLeft, ChevronRight, Flame } from 'lucide-react';
-import Spinner from '../components/Spinner';
+import { ChevronLeft, ChevronRight, Flame, PenLine, Sparkles } from 'lucide-react';
+import { Bone } from '../components/Skeleton';
 import { supabase } from '../lib/supabase';
 import { MOOD_GROUPS, MOODS, moodGroup } from '../lib/constants';
 import { computeStreaks, dayKey, wordCount } from '../lib/stats';
+import { useStartEntry } from '../context/StartEntryContext';
 
 const MONTH_INITIALS = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
 const nf = new Intl.NumberFormat();
@@ -56,6 +57,7 @@ function useTooltip() {
 
 export default function Insights() {
   const navigate = useNavigate();
+  const startEntry = useStartEntry();
   const thisYear = new Date().getFullYear();
   const [year, setYear] = useState(thisYear);
   const [yearEntries, setYearEntries] = useState([]);
@@ -174,8 +176,32 @@ export default function Insights() {
         </div>
       </section>
 
+      {!loading && allDates.length === 0 && (
+        <section className="insights-welcome">
+          <span className="empty-icon">
+            <Sparkles size={24} />
+          </span>
+          <div>
+            <h2>Your insights grow as you write</h2>
+            <p>Each entry adds a pixel, a streak day and a mood. Write your first one to see them come alive.</p>
+          </div>
+          <button type="button" className="btn btn-primary" onClick={() => startEntry()}>
+            <PenLine size={17} /> Write an entry
+          </button>
+        </section>
+      )}
+
       {loading ? (
-        <Spinner />
+        <div className="insights-grid">
+          <div className="chart-card">
+            <Bone w="40%" h={18} />
+            <Bone h={260} r={12} />
+          </div>
+          <div className="chart-card">
+            <Bone w="30%" h={18} />
+            <Bone h={140} r={12} />
+          </div>
+        </div>
       ) : (
         <div className="insights-grid">
           <section className="chart-card pixels-card">
@@ -292,22 +318,26 @@ export default function Insights() {
                     : 'none yet'}
                 </p>
               </div>
-              <div className="month-bars" role="img" aria-label={`Entries per month in ${year}`}>
-                {perMonth.map((n, i) => (
-                  <div
-                    key={i}
-                    className="month-bar-col"
-                    tabIndex={0}
-                    {...bind(`${format(new Date(year, i, 1), 'MMMM')}: ${n}`, { tap: true })}
-                  >
-                    <span className="month-bar-slot">
-                      {n === maxMonth && n > 0 && <span className="month-bar-value">{n}</span>}
-                      <span className="month-bar" style={{ height: `${(n / maxMonth) * 100}%` }} />
-                    </span>
-                    <span className="month-bar-label">{MONTH_INITIALS[i]}</span>
-                  </div>
-                ))}
-              </div>
+              {yearEntries.length === 0 ? (
+                <p className="chart-empty">No entries in {year} yet. Your busiest months will show up here.</p>
+              ) : (
+                <div className="month-bars" role="img" aria-label={`Entries per month in ${year}`}>
+                  {perMonth.map((n, i) => (
+                    <div
+                      key={i}
+                      className="month-bar-col"
+                      tabIndex={0}
+                      {...bind(`${format(new Date(year, i, 1), 'MMMM')}: ${n}`, { tap: true })}
+                    >
+                      <span className="month-bar-slot">
+                        {n === maxMonth && n > 0 && <span className="month-bar-value">{n}</span>}
+                        <span className="month-bar" style={{ height: `${(n / maxMonth) * 100}%` }} />
+                      </span>
+                      <span className="month-bar-label">{MONTH_INITIALS[i]}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </section>
           </div>
         </div>

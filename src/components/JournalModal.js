@@ -5,7 +5,7 @@ import Modal from './Modal';
 import JournalCover from './JournalCover';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-import { JOURNAL_COLORS, JOURNAL_EMOJIS, JOURNAL_FONTS, JOURNAL_PAPERS } from '../lib/constants';
+import { COVER_PATTERNS, JOURNAL_COLORS, JOURNAL_EMOJIS, JOURNAL_FONTS, JOURNAL_PAPERS } from '../lib/constants';
 import { getSchemaSupport } from '../lib/api';
 
 export default function JournalModal({ journal, onClose, onSaved }) {
@@ -18,12 +18,17 @@ export default function JournalModal({ journal, onClose, onSaved }) {
   const [font, setFont] = useState(journal?.font ?? 'sans');
   const [paper, setPaper] = useState(journal?.paper ?? 'plain');
   const [isLocked, setIsLocked] = useState(journal?.is_locked ?? false);
+  const [pattern, setPattern] = useState(journal?.cover_pattern ?? 'plain');
   const [styleSupported, setStyleSupported] = useState(false);
+  const [patternSupported, setPatternSupported] = useState(false);
   const [saving, setSaving] = useState(false);
   const hasPin = Boolean(user?.user_metadata?.pin_hash);
 
   useEffect(() => {
-    getSchemaSupport().then((s) => setStyleSupported(s.journalStyle));
+    getSchemaSupport().then((s) => {
+      setStyleSupported(s.journalStyle);
+      setPatternSupported(s.coverPattern);
+    });
   }, []);
 
   const handleSubmit = async (e) => {
@@ -36,6 +41,7 @@ export default function JournalModal({ journal, onClose, onSaved }) {
     setSaving(true);
     const fields = { title: trimmed, description: description.trim(), cover_emoji: emoji, cover_color: color };
     if (styleSupported) Object.assign(fields, { font, paper, is_locked: isLocked && hasPin });
+    if (patternSupported) fields.cover_pattern = pattern;
     const query = isEdit
       ? supabase.from('journals').update(fields).eq('id', journal.id)
       : supabase.from('journals').insert({ ...fields, user_id: user.id });
@@ -67,7 +73,7 @@ export default function JournalModal({ journal, onClose, onSaved }) {
     >
       <form id="journal-form" className="journal-form" onSubmit={handleSubmit}>
         <div className="journal-form-preview">
-          <JournalCover color={color} emoji={emoji} size="sm" />
+          <JournalCover color={color} emoji={emoji} pattern={pattern} size="sm" />
         </div>
 
         <label className="field">
@@ -130,6 +136,27 @@ export default function JournalModal({ journal, onClose, onSaved }) {
             ))}
           </div>
         </fieldset>
+
+        {patternSupported && (
+          <fieldset className="field">
+            <legend className="field-label">Cover pattern</legend>
+            <div className="pattern-grid">
+              {COVER_PATTERNS.map((p) => (
+                <button
+                  type="button"
+                  key={p.value}
+                  className={`pattern-option${pattern === p.value ? ' is-selected' : ''}`}
+                  onClick={() => setPattern(p.value)}
+                  aria-pressed={pattern === p.value}
+                  title={p.label}
+                >
+                  <span className={`pattern-swatch cover-${p.value}`} style={{ '--cover': color }} />
+                  <span className="style-label">{p.label}</span>
+                </button>
+              ))}
+            </div>
+          </fieldset>
+        )}
 
         {styleSupported && (
           <>

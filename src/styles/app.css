@@ -212,61 +212,6 @@
 }
 
 /* ---------- Home ---------- */
-.home-hero {
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 20px;
-  padding: 32px;
-  margin-bottom: 24px;
-  border-radius: var(--radius-xl);
-  background: linear-gradient(120deg, var(--ocean-500), var(--ocean-700) 60%, var(--ocean-800));
-  box-shadow: var(--shadow-ocean);
-}
-
-.home-hero::after {
-  content: '';
-  position: absolute;
-  width: 320px;
-  height: 320px;
-  right: -80px;
-  top: -140px;
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--text-on-primary) 10%, transparent);
-  pointer-events: none;
-}
-
-.home-hero > * {
-  position: relative;
-  z-index: 1;
-}
-
-.home-hero .page-title {
-  color: var(--text-on-primary);
-}
-
-.home-hero .page-subtitle {
-  color: var(--ocean-100);
-}
-
-.home-date {
-  font-size: 0.85rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--ocean-100);
-  margin-bottom: 6px;
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
-  margin-bottom: 36px;
-}
 
 .stat-card {
   display: flex;
@@ -320,38 +265,6 @@
   gap: 4px;
   min-height: var(--touch);
   font-weight: 600;
-}
-
-.mini-journals {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
-}
-
-.mini-journal {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-height: var(--touch);
-  padding: 12px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  color: var(--text-primary);
-  font-weight: 600;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-.mini-journal span:last-child {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.mini-journal:hover {
-  color: var(--text-primary);
-  border-color: var(--tint-border);
-  box-shadow: var(--shadow-sm);
 }
 
 /* ---------- Journal cover ---------- */
@@ -596,100 +509,12 @@
 }
 
 /* ---------- Entry cards ---------- */
-.entry-list {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-}
-
-.entry-card {
-  position: relative;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-  min-width: 0;
-}
-
-.entry-card:hover {
-  border-color: var(--tint-border);
-  box-shadow: var(--shadow-md);
-}
-
-.entry-card-link {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  height: 100%;
-  padding: 18px 20px;
-  color: var(--text-primary);
-}
-
-.entry-card-link:hover {
-  color: var(--text-primary);
-}
-
-.entry-card-head {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding-right: 36px;
-}
-
-.entry-mood {
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  flex-shrink: 0;
-  border-radius: var(--radius-md);
-  background: var(--tint);
-  font-size: 1.5rem;
-}
-
-.entry-card-heading {
-  min-width: 0;
-}
-
-.entry-title {
-  font-family: var(--font-display);
-  font-size: 1.15rem;
-  font-weight: 600;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.entry-date {
-  display: block;
-  margin-top: 2px;
-  font-size: 0.82rem;
-  color: var(--text-muted);
-}
-
-.entry-preview {
-  color: var(--text-secondary);
-  font-size: 0.95rem;
-  white-space: pre-line;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  overflow-wrap: anywhere;
-}
 
 .entry-meta {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
   margin-top: auto;
-}
-
-.entry-delete {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  color: var(--text-muted);
 }
 
 /* ---------- Editor ---------- */
@@ -1857,22 +1682,6 @@ body.is-typing .app-main {
   color: var(--text-muted);
 }
 
-.entry-card-locked .entry-card-link {
-  width: 100%;
-  border: none;
-  background: none;
-  text-align: left;
-  font: inherit;
-}
-
-.entry-card-locked .entry-mood {
-  color: var(--text-muted);
-}
-
-.entry-card-locked .entry-preview {
-  color: var(--text-muted);
-}
-
 .locked-panel {
   margin-top: 24px;
 }
@@ -2074,37 +1883,6 @@ body.is-typing .app-main {
 }
 
 /* ---------- Entry cards: mood tint + photo cover ---------- */
-.entry-card.mood-tint {
-  background: color-mix(in srgb, var(--mood) 7%, var(--surface));
-  border-color: color-mix(in srgb, var(--mood) 22%, var(--border));
-  box-shadow: inset 4px 0 0 var(--mood);
-}
-
-.entry-card.mood-tint .entry-mood {
-  background: color-mix(in srgb, var(--mood) 14%, var(--surface));
-}
-
-.entry-card.has-photo {
-  overflow: hidden;
-}
-
-.entry-card-photo {
-  margin: -18px -20px 2px;
-  aspect-ratio: 16 / 7;
-  background: var(--surface-2);
-  overflow: hidden;
-}
-
-.entry-card-photo img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.entry-card.has-photo .entry-delete {
-  background: color-mix(in srgb, var(--surface) 85%, transparent);
-}
 
 /* ---------- New entry: sidebar button, centre "+" ---------- */
 .sidebar-new {
@@ -2528,20 +2306,9 @@ body.is-typing .app-main {
 /* =====================================================================
    Tablet
    ===================================================================== */
-@media (max-width: 1100px) {
-  .mini-journals {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
 
 @media (max-width: 1180px) {
   .insights-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 960px) {
-  .entry-list {
     grid-template-columns: 1fr;
   }
 }
@@ -2630,20 +2397,6 @@ body.is-typing .app-main {
     width: 100%;
   }
 
-  .home-hero {
-    padding: 24px 20px;
-    border-radius: var(--radius-lg);
-  }
-
-  .home-hero .btn {
-    width: 100%;
-  }
-
-  .stats-grid {
-    gap: 10px;
-    margin-bottom: 28px;
-  }
-
   .stat-card {
     padding: 14px;
   }
@@ -2677,10 +2430,6 @@ body.is-typing .app-main {
 
   .journal-header-actions .btn {
     flex: 1;
-  }
-
-  .entry-card-link {
-    padding: 16px;
   }
 
   .emoji-grid {
@@ -2867,16 +2616,3 @@ body.is-typing .app-main {
   }
 }
 
-@media (max-width: 380px) {
-  .stats-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .stats-grid .stat-card:last-child {
-    grid-column: span 2;
-  }
-
-  .entry-title {
-    font-size: 1.05rem;
-  }
-}
