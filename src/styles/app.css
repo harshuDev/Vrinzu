@@ -2745,7 +2745,14 @@ body.is-typing .app-main {
     padding: 8px var(--gutter);
   }
 
+  /* Anchor to the full-width toolbar, not the button, so it never runs off-screen */
+  .mood-picker {
+    position: static;
+  }
+
   .mood-popover {
+    right: var(--gutter);
+    top: calc(100% + 4px);
     width: min(264px, calc(100vw - 2 * var(--gutter)));
   }
 
