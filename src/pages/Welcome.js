@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { format } from 'date-fns';
-import { Waves } from 'lucide-react';
+import { LOGO_SRC } from '../components/Logo';
 import { useBarColor } from '../lib/theme';
 
 const WELCOME_BAR = '#0284c7';
@@ -17,9 +17,7 @@ const SLIDES = [
       <div className="welcome-brand">
         <p className="welcome-kicker">Welcome to</p>
         <div className="welcome-wordmark">
-          <span className="welcome-mark">
-            <Waves strokeWidth={2.4} />
-          </span>
+          <img className="welcome-mark" src={LOGO_SRC} alt="" />
           Vrinzu
         </div>
       </div>
