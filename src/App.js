@@ -8,6 +8,7 @@ import AppLayout from './components/AppLayout';
 import SetupNotice from './components/SetupNotice';
 import Landing from './pages/Landing';
 import Welcome from './pages/Welcome';
+import Install from './pages/Install';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Home from './pages/Home';
@@ -68,6 +69,7 @@ export default function App() {
       <LinkErrorRedirect />
       <Routes>
         <Route path="/" element={isPhone ? <PhoneStart /> : <Landing />} />
+        <Route path="/install" element={<Install />} />
         <Route element={<PublicOnlyRoute />}>
           <Route path="/welcome" element={<Welcome />} />
           <Route path="/login" element={<Login />} />
