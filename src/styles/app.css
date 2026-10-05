@@ -1964,26 +1964,7 @@ body.is-typing .app-main {
   color: var(--text-secondary);
 }
 
-/* ---------- Home: streak, prompt, memories ---------- */
-.stat-streak {
-  color: var(--text-primary);
-}
-
-.stat-streak:hover {
-  color: var(--text-primary);
-  border-color: var(--tint-border);
-}
-
-.stat-streak .stat-value {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.streak-flame {
-  color: var(--mood-heavy);
-  fill: color-mix(in srgb, var(--mood-heavy) 30%, transparent);
-}
+/* ---------- Home: prompt, memories ---------- */
 
 .prompt-card {
   display: flex;
