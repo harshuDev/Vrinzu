@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import toast from 'react-hot-toast';
-import { Download, KeyRound, Lock, LogOut, Monitor, Moon, Palette, Sun, User } from 'lucide-react';
+import { Download, KeyRound, Lock, LogOut, Monitor, Moon, Palette, Share2, Smartphone, Sun, User } from 'lucide-react';
 import PasswordInput from '../components/PasswordInput';
 import { Avatar } from '../components/AppLayout';
 import ExportModal from '../components/ExportModal';
@@ -120,6 +120,20 @@ export default function Settings() {
     setSavingPassword(false);
   };
 
+  const shareInstallLink = async () => {
+    const url = `${window.location.origin}/install`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: 'Vrinzu', text: 'My private journal app. Install it here:', url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast.success('Install link copied');
+      }
+    } catch (err) {
+      if (err?.name !== 'AbortError') toast(url, { duration: 8000 });
+    }
+  };
+
   const handleSignOut = async () => {
     try {
       await signOut();
@@ -222,6 +236,23 @@ export default function Settings() {
         )}
       </section>
 
+      <section className="settings-card">
+        <h2 className="settings-heading">
+          <Smartphone size={18} /> Get the app
+        </h2>
+        <p className="settings-help">
+          Install Vrinzu on your phone (works on Android, including Nothing OS, and iPhone), or share the link with a
+          friend.
+        </p>
+        <div className="pin-form-actions">
+          <Link to="/install" className="btn btn-primary">
+            <Download size={16} /> Install on this phone
+          </Link>
+          <button type="button" className="btn btn-outline" onClick={shareInstallLink}>
+            <Share2 size={16} /> Share link
+          </button>
+        </div>
+      </section>
       <section className="settings-card">
         <h2 className="settings-heading">
           <Download size={18} /> Export
