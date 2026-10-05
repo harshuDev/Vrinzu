@@ -91,7 +91,7 @@ async function checkReminder() {
   if (!due || state.lastWritten === day || state.lastNotified === day) return;
 
   await self.registration.showNotification('Time to write ✍️', {
-    body: 'A few lines about today keeps your streak going.',
+    body: 'A quiet moment for a few lines about today, whenever you feel like it.',
     icon: '/icon-192.png',
     badge: '/icon-192.png',
     tag: 'vrinzu-reminder',

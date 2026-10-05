@@ -14,14 +14,14 @@ import {
   subMonths,
   subYears,
 } from 'date-fns';
-import { ArrowRight, Check, Clock, Feather, Flame, Lightbulb, Lock, PenLine, Plus, Shuffle, X } from 'lucide-react';
+import { ArrowRight, Check, Clock, Feather, Lightbulb, Lock, PenLine, Plus, Shuffle, X } from 'lucide-react';
 import EntryList, { EntryRow } from '../components/EntryList';
 import JournalCover from '../components/JournalCover';
 import { Bone, ListSkeleton } from '../components/Skeleton';
 import { supabase } from '../lib/supabase';
 import { PROMPTS } from '../lib/constants';
 import { cleanupStaleBlankEntries, entryDisplayTitle } from '../lib/api';
-import { computeStreaks, dayKey } from '../lib/stats';
+import { dayKey } from '../lib/stats';
 import { deleteEntryWithUndo, restoreInto } from '../lib/undoDelete';
 import { markWroteToday } from '../lib/reminders';
 import { useAuth } from '../context/AuthContext';
@@ -94,7 +94,6 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [recent, setRecent] = useState([]);
   const [journals, setJournals] = useState([]);
-  const [streak, setStreak] = useState(0);
   const [writtenDays, setWrittenDays] = useState(new Set());
   const [memories, setMemories] = useState([]);
   const [starting, setStarting] = useState(false);
@@ -122,11 +121,9 @@ export default function Home() {
       const error = [recentRes, journalsRes, datesRes, memoryRes].find((r) => r.error)?.error;
       if (error) toast.error(error.message);
       const dates = (datesRes.data ?? []).map((e) => e.created_at);
-      const streaks = computeStreaks(dates, now);
-      if (streaks.wroteToday) markWroteToday();
+      if (dates.some((d) => isToday(new Date(d)))) markWroteToday();
       setRecent(recentRes.data ?? []);
       setJournals(journalsRes.data ?? []);
-      setStreak(streaks.current);
       setWrittenDays(new Set(dates.map(dayKey)));
       // Prefer memories from past years; fall back to a month ago.
       const all = memoryRes.data ?? [];
@@ -177,14 +174,6 @@ export default function Home() {
             {greeting()}, <span className="nowrap">{firstName}</span>
           </h1>
         </div>
-        <Link
-          to="/app/insights"
-          className={`streak-badge${streak > 0 ? ' is-on' : ''}`}
-          aria-label={`${streak} day streak`}
-          title="Day streak"
-        >
-          <Flame size={18} /> {loading ? '·' : streak}
-        </Link>
       </header>
 
       {loading ? (

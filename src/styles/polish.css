@@ -111,35 +111,6 @@
   line-height: 1.2;
 }
 
-.streak-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  flex-shrink: 0;
-  min-height: 40px;
-  padding: 0 14px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-full);
-  background: var(--surface);
-  color: var(--text-muted);
-  font-weight: 700;
-  transition: transform 0.15s ease;
-}
-
-.streak-badge:hover {
-  color: var(--text-primary);
-}
-
-.streak-badge:active {
-  transform: scale(0.95);
-}
-
-.streak-badge.is-on {
-  border-color: color-mix(in srgb, #f97316 35%, var(--border));
-  background: color-mix(in srgb, #f97316 10%, var(--surface));
-  color: color-mix(in srgb, #ea580c 85%, var(--text-primary));
-}
-
 .today-card {
   display: grid;
   gap: 14px;

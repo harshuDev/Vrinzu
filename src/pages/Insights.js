@@ -3,11 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import toast from 'react-hot-toast';
 import { format, getDaysInMonth, isAfter } from 'date-fns';
-import { ChevronLeft, ChevronRight, Flame, PenLine, Sparkles } from 'lucide-react';
+import { ChevronLeft, ChevronRight, PenLine, Sparkles } from 'lucide-react';
 import { Bone } from '../components/Skeleton';
 import { supabase } from '../lib/supabase';
 import { MOOD_GROUPS, MOODS, moodGroup } from '../lib/constants';
-import { computeStreaks, dayKey, wordCount } from '../lib/stats';
+import { dayKey, wordCount } from '../lib/stats';
 import { useStartEntry } from '../context/StartEntryContext';
 
 const MONTH_INITIALS = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
@@ -94,7 +94,6 @@ export default function Insights() {
     };
   }, [year]);
 
-  const streaks = useMemo(() => computeStreaks(allDates), [allDates]);
 
   const { byDay, words, moodCounts, groupCounts, perMonth } = useMemo(() => {
     const days = {};
@@ -134,7 +133,7 @@ export default function Insights() {
       <div className="page-header">
         <div>
           <h1 className="page-title">Insights</h1>
-          <p className="page-subtitle">Your writing habit and moods at a glance.</p>
+          <p className="page-subtitle">Your writing and moods at a glance.</p>
         </div>
         <div className="year-switch" aria-label="Year">
           <button type="button" className="icon-btn" onClick={() => setYear(year - 1)} aria-label="Previous year">
@@ -154,18 +153,6 @@ export default function Insights() {
       </div>
 
       <section className="kpi-row">
-        <div className="stat-card stat-streak">
-          <span className="stat-value">
-            <Flame size={26} className="streak-flame" /> {streaks.current}
-          </span>
-          <span className="stat-label">
-            Day streak{streaks.wroteToday ? '' : streaks.current ? ' · write today to keep it' : ''}
-          </span>
-        </div>
-        <div className="stat-card">
-          <span className="stat-value">{streaks.longest}</span>
-          <span className="stat-label">Longest streak</span>
-        </div>
         <div className="stat-card">
           <span className="stat-value">{nf.format(yearEntries.length)}</span>
           <span className="stat-label">Entries in {year}</span>
@@ -173,6 +160,14 @@ export default function Insights() {
         <div className="stat-card">
           <span className="stat-value">{nf.format(words)}</span>
           <span className="stat-label">Words in {year}</span>
+        </div>
+        <div className="stat-card">
+          <span className="stat-value">{nf.format(daysWritten)}</span>
+          <span className="stat-label">Days you wrote</span>
+        </div>
+        <div className="stat-card">
+          <span className="stat-value">{nf.format(moodTotal)}</span>
+          <span className="stat-label">Moods noted</span>
         </div>
       </section>
 
@@ -183,7 +178,7 @@ export default function Insights() {
           </span>
           <div>
             <h2>Your insights grow as you write</h2>
-            <p>Each entry adds a pixel, a streak day and a mood. Write your first one to see them come alive.</p>
+            <p>Each entry adds a pixel and a mood. Write whenever you feel like it and watch your year fill in.</p>
           </div>
           <button type="button" className="btn btn-primary" onClick={() => startEntry()}>
             <PenLine size={17} /> Write an entry
