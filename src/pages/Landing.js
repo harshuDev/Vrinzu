@@ -30,7 +30,7 @@ const FEATURES = [
   {
     icon: Bell,
     title: 'Smart Reminders',
-    text: 'Build a gentle writing habit with nudges that fit the rhythm of your day.',
+    text: 'An optional, gentle nudge at a time you choose. Write when you feel like it, never because you have to.',
   },
   {
     icon: BookOpen,
