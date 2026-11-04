@@ -1,4 +1,4 @@
-# 🌊 Vrinzu
+# Vrinzu
 
 A private, beautiful online journal — a Penzu-style journaling app with an Ocean Blue theme.
 Built with React (Create React App), Supabase (auth + Postgres with Row Level Security) and deployable to Vercel as an installable PWA.
