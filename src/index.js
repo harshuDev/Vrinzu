@@ -12,6 +12,7 @@ import './styles/auth.css';
 import './styles/app.css';
 import './styles/polish.css';
 import './styles/welcome.css';
+import './styles/winter.css';
 import App from './App';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));

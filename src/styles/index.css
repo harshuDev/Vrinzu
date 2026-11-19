@@ -92,7 +92,7 @@
 /* ---------- Dark theme ----------
    "system" (no data-theme) follows the OS; data-theme forces a choice. */
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) {
+  :root:not([data-theme='light']):not([data-theme='winter']) {
   --text-primary: #e2e8f0;
   --text-secondary: #a3b3c7;
   --text-muted: #6b7f99;

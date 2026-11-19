@@ -1,15 +1,15 @@
 import { useEffect } from 'react';
 
-export const THEMES = ['system', 'light', 'dark'];
+export const THEMES = ['system', 'light', 'dark', 'winter'];
 
 // Phone status bar / title bar colour, matched to the app header in each theme.
-const BAR_COLORS = { light: '#ffffff', dark: '#0f1d30' };
+const BAR_COLORS = { light: '#ffffff', dark: '#0f1d30', winter: '#e4e8f8' };
 const darkQuery = typeof window !== 'undefined' ? window.matchMedia('(prefers-color-scheme: dark)') : null;
 let currentPref = 'system';
 let barOverride = null;
 
 const resolveTheme = (pref) => {
-  if (pref === 'light' || pref === 'dark') return pref;
+  if (pref === 'light' || pref === 'dark' || pref === 'winter') return pref;
   return darkQuery?.matches ? 'dark' : 'light';
 };
 
@@ -29,7 +29,7 @@ darkQuery?.addEventListener('change', () => currentPref === 'system' && syncThem
 export function applyTheme(pref) {
   const root = document.documentElement;
   currentPref = pref;
-  if (pref === 'light' || pref === 'dark') root.dataset.theme = pref;
+  if (pref === 'light' || pref === 'dark' || pref === 'winter') root.dataset.theme = pref;
   else delete root.dataset.theme;
   syncThemeColor();
 }

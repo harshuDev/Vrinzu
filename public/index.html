@@ -37,12 +37,12 @@
             var key = localStorage.key(i);
             if (/^sb-.*-auth-token$/.test(key)) {
               theme = JSON.parse(localStorage.getItem(key)).user.user_metadata.theme;
-              if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
+              if (theme === 'light' || theme === 'dark' || theme === 'winter') document.documentElement.dataset.theme = theme;
             }
           }
         } catch (e) {}
-        var dark = theme === 'dark' || (theme !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-        document.querySelector('meta[name="theme-color"]').content = dark ? '#0f1d30' : '#ffffff';
+        var dark = theme === 'dark' || (theme !== 'light' && theme !== 'winter' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        document.querySelector('meta[name="theme-color"]').content = theme === 'winter' ? '#e4e8f8' : dark ? '#0f1d30' : '#ffffff';
       })();
     </script>
 
