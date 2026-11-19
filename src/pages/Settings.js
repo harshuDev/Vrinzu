@@ -2,7 +2,20 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import toast from 'react-hot-toast';
-import { Download, KeyRound, Lock, LogOut, Monitor, Moon, Palette, Share2, Smartphone, Sun, User } from 'lucide-react';
+import {
+  Download,
+  KeyRound,
+  Lock,
+  LogOut,
+  Monitor,
+  Moon,
+  Palette,
+  Share2,
+  Smartphone,
+  Snowflake,
+  Sun,
+  User,
+} from 'lucide-react';
 import PasswordInput from '../components/PasswordInput';
 import { Avatar } from '../components/AppLayout';
 import ExportModal from '../components/ExportModal';
@@ -168,11 +181,12 @@ export default function Settings() {
         <h2 className="settings-heading">
           <Palette size={18} /> Appearance
         </h2>
-        <div className="segmented" role="radiogroup" aria-label="Theme">
+        <div className="segmented segmented-4" role="radiogroup" aria-label="Theme">
           {[
             { value: 'system', label: 'System', icon: Monitor },
             { value: 'light', label: 'Light', icon: Sun },
             { value: 'dark', label: 'Dark', icon: Moon },
+            { value: 'winter', label: 'Winter', icon: Snowflake },
           ].map(({ value, label, icon: Icon }) => (
             <button
               type="button"
@@ -186,7 +200,10 @@ export default function Settings() {
             </button>
           ))}
         </div>
-        <p className="settings-help">“System” follows your device’s light or dark setting. Saved to your account.</p>
+        <p className="settings-help">
+          “System” follows your device’s light or dark setting. “Winter” adds a cosy snowy look, just for the season.
+          Saved to your account.
+        </p>
       </section>
 
       <WritingSettings />

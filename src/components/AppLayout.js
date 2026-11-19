@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { ChartColumn, BookOpen, CalendarDays, CloudOff, House, LogOut, Plus, Search, Settings } from 'lucide-react';
 import Logo from './Logo';
 import LockScreen from './LockScreen';
+import WinterScene from './WinterScene';
 import { JournalLockProvider } from '../context/JournalLockContext';
 import { StartEntryProvider, useStartEntry } from '../context/StartEntryContext';
 import { RELOCK_AFTER_MS } from '../lib/pin';
@@ -106,6 +107,7 @@ export default function AppLayout() {
     <JournalLockProvider>
       <StartEntryProvider>
         <div className="app-shell">
+          <WinterScene />
           <aside className="sidebar">
             <div className="sidebar-top">
               <Logo to="/app" />

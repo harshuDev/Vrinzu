@@ -1,0 +1,202 @@
+/* =====================================================================
+   Winter theme (optional: Settings > Appearance > Winter)
+   Soft periwinkle, crisp white cards, navy ink, red scarf accents,
+   gentle snowfall and a snowy scene along the bottom.
+   ===================================================================== */
+:root[data-theme='winter'] {
+  /* The app's blue accents become winter periwinkle. */
+  --ocean-50: #eef0fb;
+  --ocean-100: #dfe3f7;
+  --ocean-200: #c4cbef;
+  --ocean-300: #a5afe6;
+  --ocean-400: #8391d8;
+  --ocean-500: #6475c8;
+  --ocean-600: #4f5fb6;
+  --ocean-700: #414f9a;
+  --ocean-800: #36417d;
+  --ocean-900: #2c3565;
+  --ocean-950: #1d2346;
+
+  --text-primary: #1f2747;
+  --text-secondary: #4b5478;
+  --text-muted: #7f87aa;
+
+  --surface: #ffffff;
+  --surface-2: #d3d9f2;
+  --surface-ocean: #e8ebf9;
+  --border: #dbe0f4;
+  --border-strong: #c0c7ea;
+
+  --tint: #eef0fb;
+  --tint-strong: #dfe3f7;
+  --tint-border: #c4cbef;
+  --accent-text: #414f9a;
+  --accent-text-strong: #2c3565;
+
+  --winter-red: #c0504a;
+  --winter-red-deep: #a63f3a;
+  --shadow-ink: #2c3565;
+  color-scheme: light;
+}
+
+/* Page background: a soft wintry sky. The app shell lets it (and the scene behind) show through. */
+:root[data-theme='winter'] .app-shell {
+  background: transparent;
+}
+
+:root[data-theme='winter'] body {
+  background: linear-gradient(180deg, #e4e8f8 0%, #d3d9f2 55%, #cfd5f0 100%) fixed;
+}
+
+:root[data-theme='winter'] .mobile-header {
+  background: color-mix(in srgb, #e4e8f8 92%, transparent);
+}
+
+:root[data-theme='winter'] .sidebar {
+  background: #f4f6fd;
+}
+
+/* Cards float a little, like the snowy widgets. */
+:root[data-theme='winter']
+  :is(
+    .today-card,
+    .entry-rows,
+    .prompt-card,
+    .settings-card,
+    .stat-card,
+    .chart-card,
+    .journal-card,
+    .calendar,
+    .journal-header
+  ) {
+  border-color: #dfe3f7;
+  box-shadow: 0 8px 24px color-mix(in srgb, #2c3565 10%, transparent);
+}
+
+/* Red scarf accents. */
+:root[data-theme='winter'] .fab {
+  background: linear-gradient(135deg, #d9645a, var(--winter-red-deep));
+  box-shadow: 0 10px 26px color-mix(in srgb, var(--winter-red) 40%, transparent);
+}
+
+:root[data-theme='winter'] .home-date::after {
+  content: ' · Hello winter ❄';
+  color: var(--winter-red);
+}
+
+:root[data-theme='winter'] .week-day.is-done .week-day-dot {
+  background: linear-gradient(135deg, #6475c8, #414f9a);
+}
+
+/* ---------- Snowfall and scenery ---------- */
+.winter-scene {
+  display: none;
+}
+
+:root[data-theme='winter'] .winter-scene {
+  display: block;
+}
+
+/* Behind everything on the page (the body background is painted on the canvas). */
+.winter-snow,
+.winter-hills {
+  position: fixed;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.winter-snow {
+  inset: 0 0 0 var(--sidebar-width);
+  overflow: hidden;
+}
+
+.winter-flake {
+  position: absolute;
+  top: -24px;
+  display: block;
+  width: calc(var(--size) * 3);
+  color: #ffffff;
+  opacity: 0.9;
+  animation: winter-fall linear infinite;
+  will-change: transform;
+}
+
+.winter-dot {
+  display: block;
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+}
+
+.winter-star {
+  display: block;
+  width: calc(var(--size) * 3.5);
+  height: calc(var(--size) * 3.5);
+  color: #ffffff;
+  filter: drop-shadow(0 1px 2px rgba(65, 79, 154, 0.25));
+}
+
+@keyframes winter-fall {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate3d(14px, 52vh, 0) rotate(120deg);
+  }
+  100% {
+    transform: translate3d(-6px, 106vh, 0) rotate(240deg);
+  }
+}
+
+.winter-hills {
+  left: var(--sidebar-width);
+  right: 0;
+  bottom: 0;
+  width: calc(100% - var(--sidebar-width));
+  max-width: none;
+  height: 140px;
+}
+
+@media (max-width: 768px) {
+  .winter-snow {
+    left: 0;
+  }
+
+  .winter-hills {
+    left: 0;
+    width: 100%;
+    height: 120px;
+    bottom: calc(var(--bottom-nav-height) + var(--safe-bottom) - 6px);
+  }
+
+  /* Room at the bottom so the last card can scroll clear of the scenery. */
+  :root[data-theme='winter'] .app-main {
+    padding-bottom: calc(var(--bottom-nav-height) + var(--safe-bottom) + 60px);
+  }
+}
+
+/* Calm, still snow for people who prefer less motion. */
+@media (prefers-reduced-motion: reduce) {
+  .winter-flake {
+    animation: none;
+    top: calc(var(--size) * 9%);
+    transform: translateY(calc(var(--size) * 18vh));
+  }
+}
+
+/* The theme picker has four options. */
+.segmented-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  max-width: 520px;
+}
+
+@media (max-width: 400px) {
+  .segmented-4 .segmented-option {
+    flex-direction: column;
+    gap: 2px;
+    font-size: 0.8rem;
+    min-height: 52px;
+  }
+}
