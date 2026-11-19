@@ -79,8 +79,8 @@ export async function sendTestReminder() {
   const reg = await navigator.serviceWorker.ready;
   await reg.showNotification('Time to write ✍️', {
     body: 'This is how your daily reminder will look.',
-    icon: '/icon-192.png',
-    badge: '/icon-192.png',
+    icon: '/icon-192-winter.png',
+    badge: '/icon-192-winter.png',
     tag: 'vrinzu-reminder',
     data: { url: '/app' },
   });
