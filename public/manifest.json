@@ -3,10 +3,10 @@
   "name": "Vrinzu Private Journal",
   "description": "Write, reflect and remember in your private online journal.",
   "icons": [
-    { "src": "favicon.ico", "sizes": "64x64 32x32 16x16", "type": "image/x-icon" },
-    { "src": "icon-192.png", "type": "image/png", "sizes": "192x192", "purpose": "any" },
-    { "src": "icon-512.png", "type": "image/png", "sizes": "512x512", "purpose": "any" },
-    { "src": "icon-maskable-512.png", "type": "image/png", "sizes": "512x512", "purpose": "maskable" }
+    { "src": "favicon.ico?v=winter", "sizes": "64x64 32x32 16x16", "type": "image/x-icon" },
+    { "src": "icon-192-winter.png", "type": "image/png", "sizes": "192x192", "purpose": "any" },
+    { "src": "icon-512-winter.png", "type": "image/png", "sizes": "512x512", "purpose": "any" },
+    { "src": "icon-maskable-512-winter.png", "type": "image/png", "sizes": "512x512", "purpose": "maskable" }
   ],
   "start_url": "/app",
   "scope": "/",

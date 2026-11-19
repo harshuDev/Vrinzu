@@ -1,10 +1,10 @@
 /* Vrinzu service worker — makes the app installable, lets it open offline and
    shows the daily writing reminder. API calls always go to the network. */
-const SHELL_CACHE = 'vrinzu-shell-v4';
+const SHELL_CACHE = 'vrinzu-shell-v5';
 const ASSET_CACHE = 'vrinzu-assets-v1';
 const STATE_CACHE = 'vrinzu-state';
 const KEEP = [SHELL_CACHE, ASSET_CACHE, STATE_CACHE];
-const SHELL = ['/', '/manifest.json', '/icon-192.png', '/icon-512.png'];
+const SHELL = ['/', '/manifest.json', '/icon-192-winter.png', '/icon-512-winter.png'];
 const MAX_ASSETS = 80;
 
 self.addEventListener('install', (event) => {
@@ -92,8 +92,8 @@ async function checkReminder() {
 
   await self.registration.showNotification('Time to write ✍️', {
     body: 'A quiet moment for a few lines about today, whenever you feel like it.',
-    icon: '/icon-192.png',
-    badge: '/icon-192.png',
+    icon: '/icon-192-winter.png',
+    badge: '/icon-192-winter.png',
     tag: 'vrinzu-reminder',
     data: { url: '/app' },
   });
